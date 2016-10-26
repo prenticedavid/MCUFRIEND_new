@@ -6,6 +6,7 @@
 //#define SUPPORT_8347A           //costs about +178 bytes on top of 8347D
 //#define SUPPORT_8352A           //costs about 688 bytes, 0.27s
 #define OFFSET_9327 32             //costs about 103 bytes, 0.08s
+#define SUPPORT_4532              //costs about 144 bytes
 
 #include "MCUFRIEND_kbv.h"
 #if defined(USE_SERIAL)
@@ -1104,7 +1105,40 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
         *p16 = 800;
         break;
 #endif
-
+#ifdef SUPPORT_4532
+    case 0x4532:
+        _lcd_capable = 0 | REV_SCREEN;
+        static const uint16_t LGDP4532_regValues[] PROGMEM = {
+            0x0011, 0x0020,
+            0x0010, 0x3428,
+            0x0015, 0x0030,
+            0x0012, 0x0002,
+            0x0013, 0x1038,
+            TFTLCD_DELAY, 40,
+            0x0012, 0x0012,
+            TFTLCD_DELAY, 40,
+            0x0010, 0x3420,
+            0x0013, 0x3038,
+            TFTLCD_DELAY, 70,
+            0x0001, 0x0100,
+            0x0002, 0x0300,
+            0x0003, 0x1030,
+            0x0008, 0x0808,
+            0x000A, 0x0008,
+            0x0060, 0x2700,
+            0x0061, 0x0001,
+            0x0090, 0x00A0,
+            0x0092, 0x0100,
+            0x0093, 0x0100,
+            0x0007, 0x0001,
+            0x0007, 0x0021,
+            0x0007, 0x0023,
+            0x0007, 0x0033,
+            0x0007, 0x0133,
+        };
+        init_table16(LGDP4532_regValues, sizeof(LGDP4532_regValues));
+        break;
+#endif
 #ifdef SUPPORT_4535
     case 0x4535:
         _lcd_capable = 0 | REV_SCREEN;  // | INVERT_GS;

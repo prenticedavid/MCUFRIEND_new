@@ -479,7 +479,7 @@ void write_8(uint8_t x)
 #define RESET_OUTPUT  PIN_OUTPUT(RESET_PORT, RESET_PIN)
 
  // General macros.   IOCLR registers are 1 cycle when optimised.
-#define WR_STROBE { WR_ACTIVE; WR_IDLE; }       //PWLW=TWRL=50ns
+#define WR_STROBE { WR_ACTIVE;  delay_us(1); WR_IDLE; }       //PWLW=TWRL=50ns
 #define RD_STROBE RD_IDLE, RD_ACTIVE, RD_ACTIVE, RD_ACTIVE      //PWLR=TRDL=150ns, tDDR=100ns
 
 #if !defined(GPIO_INIT)

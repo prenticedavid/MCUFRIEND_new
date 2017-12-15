@@ -128,7 +128,6 @@ void show_tft(void)
 void setup(void)
 {
     uint16_t tmp;
-    tft.begin(9600);
 
     tft.reset();
     identifier = tft.readID();
@@ -184,6 +183,10 @@ void setup(void)
     } else if (identifier == 0xB509) {
         name = "R61509V";
         TS_LEFT = 889; TS_RT = 149; TS_TOP = 106; TS_BOT = 975;
+        SwapXY = 1;
+    } else if (identifier == 0x5408) {
+        name = "5408";
+        TS_LEFT = 150; TS_RT = 960; TS_TOP = 155; TS_BOT = 925;
         SwapXY = 1;
     } else {
         name = "unknown";

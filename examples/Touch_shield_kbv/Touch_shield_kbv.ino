@@ -128,6 +128,7 @@ void show_tft(void)
 void setup(void)
 {
     uint16_t tmp;
+    Serial.begin(9600);
 
     tft.reset();
     identifier = tft.readID();
@@ -136,6 +137,10 @@ void setup(void)
     } else if (identifier == 0x0154) {
         name = "S6D0154";
         TS_LEFT = 914; TS_RT = 181; TS_TOP = 957; TS_BOT = 208;
+    } else if (identifier == 0x5408) {  //thanks gazialankus
+        name = "SPFD5408";
+        TS_LEFT = 150; TS_RT = 960; TS_TOP = 155; TS_BOT = 925;
+        SwapXY = 1;
     } else if (identifier == 0x7783) {
         name = "ST7781";
         TS_LEFT = 865; TS_RT = 155; TS_TOP = 942; TS_BOT = 153;

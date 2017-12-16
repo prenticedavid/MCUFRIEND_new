@@ -51,7 +51,7 @@ bool ISPRESSED(void)
     bool state, oldstate;
     while (count < 10) {
         readResistiveTouch();
-        state = tp.z > 20;
+        state = tp.z > 200;     //ADJUST THIS VALUE TO SUIT YOUR SCREEN e.g. 20 ... 250
         if (state == oldstate) count++;
         else count = 0;
         oldstate = state;

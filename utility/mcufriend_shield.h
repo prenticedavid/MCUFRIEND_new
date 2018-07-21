@@ -682,6 +682,9 @@ static void setReadDir()
 
 #define WR_ACTIVE  REG_WRITE(GPIO_OUT_W1TC_REG, BIT(LCD_WR)) //clear PIN_LOW(WR_PORT, WR_PIN)
 #define WR_IDLE    REG_WRITE(GPIO_OUT_W1TS_REG, BIT(LCD_WR)) //set   PIN_HIGH(WR_PORT, WR_PIN)
+// General macros.   IOCLR registers are 1 cycle when optimised.
+#define WR_STROBE { WR_ACTIVE; WRITE_DELAY; WR_IDLE; }       //PWLW=TWRL=50ns
+#define RD_STROBE RD_IDLE, RD_ACTIVE, RD_ACTIVE, RD_ACTIVE      //PWLR=TRDL=150ns, tDDR=100ns
 
 #else
 #error MCU unsupported
@@ -707,9 +710,11 @@ static void setReadDir()
 #define RESET_IDLE    PIN_HIGH(RESET_PORT, RESET_PIN)
 #define RESET_OUTPUT  PIN_OUTPUT(RESET_PORT, RESET_PIN)
 
- // General macros.   IOCLR registers are 1 cycle when optimised.
-#define WR_STROBE { WR_ACTIVE; WRITE_DELAY; WR_IDLE; }       //PWLW=TWRL=50ns
-#define RD_STROBE RD_IDLE, RD_ACTIVE, RD_ACTIVE, RD_ACTIVE      //PWLR=TRDL=150ns, tDDR=100ns
+#ifndef WR_STROBE
+   // General macros.   IOCLR registers are 1 cycle when optimised.
+  #define WR_STROBE { WR_ACTIVE; WR_IDLE; }       //PWLW=TWRL=50ns
+  #define RD_STROBE RD_IDLE, RD_ACTIVE, RD_ACTIVE, RD_ACTIVE      //PWLR=TRDL=150ns, tDDR=100ns
+#endif
 
 #if !defined(GPIO_INIT)
 #define GPIO_INIT()

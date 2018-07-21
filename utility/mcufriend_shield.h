@@ -671,7 +671,7 @@ static void setReadDir()
 #define WRITE_DELAY { }
 #define READ_DELAY  { }
 
-#define write8(x)     { write_8(x); WRITE_DELAY; WR_STROBE; }
+#define write8(x)     { write_8(x); WRITE_DELAY; WRITE_DELAY; WR_STROBE; }
 #define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
 #define READ_8(dst)   { RD_STROBE; READ_DELAY; dst = read_8(); RD_IDLE; }
 #define READ_16(dst)  { uint8_t hi; READ_8(hi); READ_8(dst); dst |= (hi << 8); }
@@ -680,11 +680,11 @@ static void setReadDir()
 #define PIN_HIGH(p, b)       (digitalWrite(b, HIGH))
 #define PIN_OUTPUT(p, b)     (pinMode(b, OUTPUT))
 
-#define WR_ACTIVE  REG_WRITE(GPIO_OUT_W1TC_REG, BIT(LCD_WR)) //clear PIN_LOW(WR_PORT, WR_PIN)
-#define WR_IDLE    REG_WRITE(GPIO_OUT_W1TS_REG, BIT(LCD_WR)) //set   PIN_HIGH(WR_PORT, WR_PIN)
-// General macros.   IOCLR registers are 1 cycle when optimised.
-#define WR_STROBE { WR_ACTIVE; WRITE_DELAY; WR_IDLE; }       //PWLW=TWRL=50ns
-#define RD_STROBE RD_IDLE, RD_ACTIVE, RD_ACTIVE, RD_ACTIVE      //PWLR=TRDL=150ns, tDDR=100ns
+//#define WR_ACTIVE  REG_WRITE(GPIO_OUT_W1TC_REG, BIT(LCD_WR)) //clear PIN_LOW(WR_PORT, WR_PIN)
+//#define WR_IDLE    REG_WRITE(GPIO_OUT_W1TS_REG, BIT(LCD_WR)) //set   PIN_HIGH(WR_PORT, WR_PIN)
+  // General macros.   IOCLR registers are 1 cycle when optimised.
+//#define WR_STROBE { WR_ACTIVE; WRITE_DELAY; WR_IDLE; }       //PWLW=TWRL=50ns
+//#define RD_STROBE RD_IDLE, RD_ACTIVE, RD_ACTIVE, RD_ACTIVE      //PWLR=TRDL=150ns, tDDR=100ns
 
 #else
 #error MCU unsupported

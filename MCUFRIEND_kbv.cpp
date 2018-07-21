@@ -2802,7 +2802,7 @@ case 0x4532:    // thanks Leodino
         };
         table8_ads = ILI9806_regValues, table_size = sizeof(ILI9806_regValues);
         p16 = (int16_t *) & HEIGHT;
-        *p16 = 854;   //panels can be 480x864, 480x854, 480x800, 480x840, 480x720 
+        *p16 = 864;   //panels can be 480x864, 480x854, 480x800, 480x840, 480x720 
         p16 = (int16_t *) & WIDTH;
         *p16 = 480;
         break;

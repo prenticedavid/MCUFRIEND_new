@@ -119,6 +119,18 @@ static inline void WriteCmdParam4(uint8_t cmd, uint8_t d1, uint8_t d2, uint8_t d
 //#define WriteCmdParam4(cmd, d1, d2, d3, d4) {uint8_t d[4];d[0] = d1, d[1] = d2, d[2] = d3, d[3] = d4;WriteCmdParamN(cmd, 4, d);}
 void MCUFRIEND_kbv::pushCommand(uint16_t cmd, uint8_t * block, int8_t N) { WriteCmdParamN(cmd, N, block); }
 
+void printhex(uint16_t val){
+  byte h, l;
+  h = val >> 8;
+  l = val;
+  if (h < 0x10) Serial.print("0");
+  Serial.print(h, HEX);
+  Serial.print(" ");
+  if (l < 0x10) Serial.print("0");
+  Serial.print(l, HEX);
+  Serial.print(" ");
+}
+
 static uint16_t read16bits(void)
 {
     uint16_t ret;
@@ -172,6 +184,15 @@ uint16_t MCUFRIEND_kbv::readID(void)
 {
     uint16_t ret, ret2;
     uint8_t msb;
+    #ifdef SUPPORT_9806
+      ret = readReg32(0xD3);           //Obtain ID
+      //Serial.print("RET ");printhex(ret);Serial.println();
+      if (ret == 0x9806){             //Check if 0x9806
+          //Serial.println("Return ILI9806");
+          readReg32(0xD3);           //forces a read again, I observed that if not, don't work propperly
+          return 0x9806;
+        }
+    #endif
     ret = readReg(0);           //forces a reset() if called before begin()
     if (ret == 0x5408)          //the SPFD5408 fails the 0xD3D3 test.
         return 0x5408;
@@ -2776,6 +2797,8 @@ case 0x4532:    // thanks Leodino
             (0xE0), 16, 0x00, 0x0C, 0x15, 0x0D, 0x0F, 0x0C, 0x07, 0x05, 0x07, 0x0B, 0x10, 0x10, 0x0D, 0x17, 0x0F, 0x00,
             (0xE1), 16, 0x00, 0x0D, 0x15, 0x0E, 0x10, 0x0D, 0x08, 0x06, 0x07, 0x0C, 0x11, 0x11, 0x0E, 0x17, 0x0F, 0x00,
             (0x35), 1, /*Tearing Effect ON*/0x00,
+            (0x11), 1, /* Sleep Out*/0x00,
+            (0x29), 1, /* Display ON*/0x00,
         };
         table8_ads = ILI9806_regValues, table_size = sizeof(ILI9806_regValues);
         p16 = (int16_t *) & HEIGHT;

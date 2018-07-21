@@ -680,6 +680,9 @@ static void setReadDir()
 #define PIN_HIGH(p, b)       (digitalWrite(b, HIGH))
 #define PIN_OUTPUT(p, b)     (pinMode(b, OUTPUT))
 
+#define WR_ACTIVE  REG_WRITE(GPIO_OUT_W1TC_REG, BIT(LCD_WR)) //clear PIN_LOW(WR_PORT, WR_PIN)
+#define WR_IDLE    REG_WRITE(GPIO_OUT_W1TS_REG, BIT(LCD_WR)) //set   PIN_HIGH(WR_PORT, WR_PIN)
+
 #else
 #error MCU unsupported
 #endif                          // regular UNO shields on Arduino boards
@@ -689,8 +692,10 @@ static void setReadDir()
 #define RD_ACTIVE  PIN_LOW(RD_PORT, RD_PIN)
 #define RD_IDLE    PIN_HIGH(RD_PORT, RD_PIN)
 #define RD_OUTPUT  PIN_OUTPUT(RD_PORT, RD_PIN)
-#define WR_ACTIVE  PIN_LOW(WR_PORT, WR_PIN)
-#define WR_IDLE    PIN_HIGH(WR_PORT, WR_PIN)
+#ifndef WR_ACTIVE
+  #define WR_ACTIVE  PIN_LOW(WR_PORT, WR_PIN)
+  #define WR_IDLE    PIN_HIGH(WR_PORT, WR_PIN)
+#endif
 #define WR_OUTPUT  PIN_OUTPUT(WR_PORT, WR_PIN)
 #define CD_COMMAND PIN_LOW(CD_PORT, CD_PIN)
 #define CD_DATA    PIN_HIGH(CD_PORT, CD_PIN)
@@ -703,7 +708,7 @@ static void setReadDir()
 #define RESET_OUTPUT  PIN_OUTPUT(RESET_PORT, RESET_PIN)
 
  // General macros.   IOCLR registers are 1 cycle when optimised.
-#define WR_STROBE { WR_ACTIVE; WR_IDLE; }       //PWLW=TWRL=50ns
+#define WR_STROBE { WR_ACTIVE; WRITE_DELAY; WR_IDLE; }       //PWLW=TWRL=50ns
 #define RD_STROBE RD_IDLE, RD_ACTIVE, RD_ACTIVE, RD_ACTIVE      //PWLR=TRDL=150ns, tDDR=100ns
 
 #if !defined(GPIO_INIT)

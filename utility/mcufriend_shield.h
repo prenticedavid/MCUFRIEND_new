@@ -376,7 +376,7 @@ void write_8(uint8_t x)
 #define WRITE_DELAY { }
 #define READ_DELAY  { RD_ACTIVE; }
 #if defined(__STM32F1__)  //MapleCore crts.o does RCC.  not understand regular syntax anyway
-#define GPIO_INIT()      
+#define GPIO_INIT()
 #else
 #define GPIO_INIT()   { RCC->APB2ENR |= RCC_APB2ENR_IOPAEN | RCC_APB2ENR_IOPBEN | RCC_APB2ENR_IOPCEN | RCC_APB2ENR_IOPDEN | RCC_APB2ENR_AFIOEN; \
         AFIO->MAPR |= AFIO_MAPR_SWJ_CFG_1;}
@@ -580,7 +580,7 @@ void write_8(uint8_t x)
 #elif defined(ESP32)       //regular UNO shield on TTGO D1 R32 (ESP32)
 #define LCD_RD  2  //LED
 #define LCD_WR  4
-#define LCD_RS 15  //hard-wired to A2 (GPIO35) 
+#define LCD_RS 15  //hard-wired to A2 (GPIO35)
 #define LCD_CS 33  //hard-wired to A3 (GPIO34)
 #define LCD_RST 32 //hard-wired to A4 (GPIO36)
 
@@ -671,20 +671,21 @@ static void setReadDir()
 #define WRITE_DELAY { }
 #define READ_DELAY  { }
 
-#define write8(x)     { write_8(x); WRITE_DELAY; WRITE_DELAY; WR_STROBE; }
+#define write8(x)     { write_8(x); WRITE_DELAY; WR_STROBE; }
 #define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
 #define READ_8(dst)   { RD_STROBE; READ_DELAY; dst = read_8(); RD_IDLE; }
 #define READ_16(dst)  { uint8_t hi; READ_8(hi); READ_8(dst); dst |= (hi << 8); }
 
+#if 1
+#define PIN_LOW(p, b)       (*((volatile uint32_t*)(&p)+2)) = (1<<(b&31))
+#define PIN_HIGH(p, b)      (*((volatile uint32_t*)(&p)+1)) = (1<<(b&31))
+#define CD_COMMAND          (digitalWrite(CD_PIN, LOW))
+#define CD_DATA             (digitalWrite(CD_PIN, HIGH))
+#else
 #define PIN_LOW(p, b)        (digitalWrite(b, LOW))
 #define PIN_HIGH(p, b)       (digitalWrite(b, HIGH))
+#endif
 #define PIN_OUTPUT(p, b)     (pinMode(b, OUTPUT))
-
-//#define WR_ACTIVE  REG_WRITE(GPIO_OUT_W1TC_REG, BIT(LCD_WR)) //clear PIN_LOW(WR_PORT, WR_PIN)
-//#define WR_IDLE    REG_WRITE(GPIO_OUT_W1TS_REG, BIT(LCD_WR)) //set   PIN_HIGH(WR_PORT, WR_PIN)
-  // General macros.   IOCLR registers are 1 cycle when optimised.
-//#define WR_STROBE { WR_ACTIVE; WRITE_DELAY; WR_IDLE; }       //PWLW=TWRL=50ns
-//#define RD_STROBE RD_IDLE, RD_ACTIVE, RD_ACTIVE, RD_ACTIVE      //PWLR=TRDL=150ns, tDDR=100ns
 
 #else
 #error MCU unsupported
@@ -695,13 +696,13 @@ static void setReadDir()
 #define RD_ACTIVE  PIN_LOW(RD_PORT, RD_PIN)
 #define RD_IDLE    PIN_HIGH(RD_PORT, RD_PIN)
 #define RD_OUTPUT  PIN_OUTPUT(RD_PORT, RD_PIN)
-#ifndef WR_ACTIVE
-  #define WR_ACTIVE  PIN_LOW(WR_PORT, WR_PIN)
-  #define WR_IDLE    PIN_HIGH(WR_PORT, WR_PIN)
-#endif
+#define WR_ACTIVE  PIN_LOW(WR_PORT, WR_PIN)
+#define WR_IDLE    PIN_HIGH(WR_PORT, WR_PIN)
 #define WR_OUTPUT  PIN_OUTPUT(WR_PORT, WR_PIN)
-#define CD_COMMAND PIN_LOW(CD_PORT, CD_PIN)
-#define CD_DATA    PIN_HIGH(CD_PORT, CD_PIN)
+#ifndef CD_COMMAND
+  #define CD_COMMAND PIN_LOW(CD_PORT, CD_PIN)
+  #define CD_DATA    PIN_HIGH(CD_PORT, CD_PIN)
+#endif
 #define CD_OUTPUT  PIN_OUTPUT(CD_PORT, CD_PIN)
 #define CS_ACTIVE  PIN_LOW(CS_PORT, CS_PIN)
 #define CS_IDLE    PIN_HIGH(CS_PORT, CS_PIN)
@@ -710,15 +711,13 @@ static void setReadDir()
 #define RESET_IDLE    PIN_HIGH(RESET_PORT, RESET_PIN)
 #define RESET_OUTPUT  PIN_OUTPUT(RESET_PORT, RESET_PIN)
 
-#ifndef WR_STROBE
-   // General macros.   IOCLR registers are 1 cycle when optimised.
-  #define WR_STROBE { WR_ACTIVE; WR_IDLE; }       //PWLW=TWRL=50ns
-  #define RD_STROBE RD_IDLE, RD_ACTIVE, RD_ACTIVE, RD_ACTIVE      //PWLR=TRDL=150ns, tDDR=100ns
-#endif
+ // General macros.   IOCLR registers are 1 cycle when optimised.
+#define WR_STROBE { WR_ACTIVE; WR_IDLE; }       //PWLW=TWRL=50ns
+#define RD_STROBE RD_IDLE, RD_ACTIVE, RD_ACTIVE, RD_ACTIVE      //PWLR=TRDL=150ns, tDDR=100ns
 
 #if !defined(GPIO_INIT)
 #define GPIO_INIT()
 #endif
 #define CTL_INIT()   { GPIO_INIT(); RD_OUTPUT; WR_OUTPUT; CD_OUTPUT; CS_OUTPUT; RESET_OUTPUT; }
-#define WriteCmd(x)  { CD_COMMAND; write16(x); CD_DATA; }
-#define WriteData(x) { write16(x); }
+#define WriteCmd(x)  { CD_COMMAND; RD_IDLE; WR_IDLE; write16(x); CD_DATA; }
+#define WriteData(x) { CD_DATA; write16(x); }

@@ -82,7 +82,7 @@ void MCUFRIEND_kbv::reset(void)
     delay(100);
     RESET_IDLE;
     delay(100);
-	//WriteCmdData(0xB0, 0x0000);   //R61520 needs this to read ID
+	WriteCmdData(0xB0, 0x0000);   //R61520 needs this to read ID
 }
 
 static void writecmddata(uint16_t cmd, uint16_t dat)
@@ -102,10 +102,10 @@ static void WriteCmdParamN(uint16_t cmd, int8_t N, uint8_t * block)
     while (N-- > 0) {
         uint8_t u8 = *block++;
         write8(u8);
-        /*if (N && is8347) {
+        if (N && is8347) {
             cmd++;
             WriteCmd(cmd);
-        }*/
+        }
     }
     CS_IDLE;
 }

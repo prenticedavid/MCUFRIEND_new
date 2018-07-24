@@ -687,6 +687,9 @@ static void setReadDir()
 #endif
 #define PIN_OUTPUT(p, b)     (pinMode(b, OUTPUT))
 
+#define WriteCmd(x)  { CD_COMMAND; RD_IDLE; WR_IDLE; write16(x); CD_DATA; }
+#define WriteData(x) { CD_DATA; write16(x); }
+
 #else
 #error MCU unsupported
 #endif                          // regular UNO shields on Arduino boards
@@ -719,5 +722,7 @@ static void setReadDir()
 #define GPIO_INIT()
 #endif
 #define CTL_INIT()   { GPIO_INIT(); RD_OUTPUT; WR_OUTPUT; CD_OUTPUT; CS_OUTPUT; RESET_OUTPUT; }
-#define WriteCmd(x)  { CD_COMMAND; RD_IDLE; WR_IDLE; write16(x); CD_DATA; }
-#define WriteData(x) { CD_DATA; write16(x); }
+#ifndef WriteCmd
+  #define WriteCmd(x)  { CD_COMMAND; write16(x); CD_DATA; }
+  #define WriteData(x) { write16(x); }
+#endif

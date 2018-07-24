@@ -504,7 +504,7 @@ void MCUFRIEND_kbv::drawPixel(int16_t x, int16_t y, uint16_t color)
 #if defined(SUPPORT_9488_555)
     if (is555) color = color565_to_555(color);
 #endif
-    setAddrWindow(x, y, x+1, y+1);
+    setAddrWindow(x, y, x, y);
 //    CS_ACTIVE; WriteCmd(_MW); write16(color); CS_IDLE; //-0.01s +98B
     WriteCmdData(_MW, color);
 }

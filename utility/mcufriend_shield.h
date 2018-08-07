@@ -668,17 +668,17 @@ static void setReadDir()
     pinMode(LCD_D7, INPUT);
 }
 
-#define WRITE_DELAY { }
-#define READ_DELAY  { }
+#define WRITE_DELAY { WR_ACTIVE; } //please try this with both PIN_LOW() macros
+#define READ_DELAY  { /*RD_IDLE; RD_IDLE; */}
 
 #define write8(x)     { write_8(x); WRITE_DELAY; WR_STROBE; }
-#define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
+#define write16(x)    { RD_IDLE; WR_IDLE; uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
 #define READ_8(dst)   { RD_STROBE; READ_DELAY; dst = read_8(); RD_IDLE; }
 #define READ_16(dst)  { uint8_t hi; READ_8(hi); READ_8(dst); dst |= (hi << 8); }
 
 #if 1
-#define PIN_LOW(p, b)       (*((volatile uint32_t*)(&p)+2)) = (1<<(b&31))
-#define PIN_HIGH(p, b)      (*((volatile uint32_t*)(&p)+1)) = (1<<(b&31))
+#define PIN_LOW(p, b)        (*((volatile uint32_t*)(&p)+2)) = (1<<(b&31))
+#define PIN_HIGH(p, b)       (*((volatile uint32_t*)(&p)+1)) = (1<<(b&31))
 #define CD_COMMAND          (digitalWrite(CD_PIN, LOW))
 #define CD_DATA             (digitalWrite(CD_PIN, HIGH))
 #else
@@ -686,9 +686,6 @@ static void setReadDir()
 #define PIN_HIGH(p, b)       (digitalWrite(b, HIGH))
 #endif
 #define PIN_OUTPUT(p, b)     (pinMode(b, OUTPUT))
-
-#define WriteCmd(x)  { CD_COMMAND; RD_IDLE; WR_IDLE; write16(x); CD_DATA; }
-#define WriteData(x) { CD_DATA; write16(x); }
 
 #else
 #error MCU unsupported
@@ -722,7 +719,5 @@ static void setReadDir()
 #define GPIO_INIT()
 #endif
 #define CTL_INIT()   { GPIO_INIT(); RD_OUTPUT; WR_OUTPUT; CD_OUTPUT; CS_OUTPUT; RESET_OUTPUT; }
-#ifndef WriteCmd
-  #define WriteCmd(x)  { CD_COMMAND; write16(x); CD_DATA; }
-  #define WriteData(x) { write16(x); }
-#endif
+#define WriteCmd(x)  { CD_COMMAND; write16(x); CD_DATA; }
+#define WriteData(x) { write16(x); }

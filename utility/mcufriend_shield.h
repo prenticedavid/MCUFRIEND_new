@@ -673,14 +673,13 @@ static void setReadDir()
 
 #define write8(x)     { write_8(x); WRITE_DELAY; WR_STROBE; }
 #define write16(x)    { RD_IDLE; WR_IDLE; uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
-#define READ_8(dst)   { RD_STROBE; READ_DELAY; dst = read_8(); RD_IDLE; }
+#define READ_8(dst)   { RD_STROBE; /*READ_DELAY;*/ dst = read_8(); RD_IDLE; }
 #define READ_16(dst)  { uint8_t hi; READ_8(hi); READ_8(dst); dst |= (hi << 8); }
 
 #if 1
 #define PIN_LOW(p, b)        (*((volatile uint32_t*)(&p)+2)) = (1<<(b&31))
 #define PIN_HIGH(p, b)       (*((volatile uint32_t*)(&p)+1)) = (1<<(b&31))
-#define CD_COMMAND          (digitalWrite(CD_PIN, LOW))
-#define CD_DATA             (digitalWrite(CD_PIN, HIGH))
+#define CD_DATA             NOP();NOP();NOP();NOP();NOP();NOP();NOP();NOP();NOP();NOP();NOP();NOP();NOP();NOP();NOP();NOP();NOP();(*((volatile uint32_t*)(&CD_PORT)+1)) = (1<<(CD_PIN&31));
 #else
 #define PIN_LOW(p, b)        (digitalWrite(b, LOW))
 #define PIN_HIGH(p, b)       (digitalWrite(b, HIGH))
@@ -699,8 +698,7 @@ static void setReadDir()
 #define WR_ACTIVE  PIN_LOW(WR_PORT, WR_PIN)
 #define WR_IDLE    PIN_HIGH(WR_PORT, WR_PIN)
 #define WR_OUTPUT  PIN_OUTPUT(WR_PORT, WR_PIN)
-#ifndef CD_COMMAND
-  #define CD_COMMAND PIN_LOW(CD_PORT, CD_PIN)
+#ifndef CD_DATA
   #define CD_DATA    PIN_HIGH(CD_PORT, CD_PIN)
 #endif
 #define CD_OUTPUT  PIN_OUTPUT(CD_PORT, CD_PIN)

@@ -668,18 +668,19 @@ static void setReadDir()
     pinMode(LCD_D7, INPUT);
 }
 
-#define WRITE_DELAY { WR_ACTIVE; /*WR_ACTIVE; WR_ACTIVE; WR_ACTIVE; */} //please try this with both PIN_LOW() macros
-#define READ_DELAY  { /*RD_IDLE; RD_IDLE; */}
+//#define WRITE_DELAY { } //please try this with both PIN_LOW() macros
+//#define READ_DELAY  { }
+#define NOP_DELAY   { NOP();NOP(); }
 
-#define write8(x)     { write_8(x); WRITE_DELAY; WR_STROBE; }
-#define write16(x)    { RD_IDLE; WR_IDLE; uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
-#define READ_8(dst)   { RD_STROBE; /*READ_DELAY;*/ dst = read_8(); RD_IDLE; }
+#define write8(x)     { write_8(x); WR_STROBE; }
+#define write16(x)    { RD_IDLE; uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
+#define READ_8(dst)   { RD_STROBE; dst = read_8(); RD_IDLE; }
 #define READ_16(dst)  { uint8_t hi; READ_8(hi); READ_8(dst); dst |= (hi << 8); }
 
 #if 1
 #define PIN_LOW(p, b)        (*((volatile uint32_t*)(&p)+2)) = (1<<(b&31))
 #define PIN_HIGH(p, b)       (*((volatile uint32_t*)(&p)+1)) = (1<<(b&31))
-#define CD_DATA             NOP();NOP();NOP();NOP();NOP();NOP();NOP();NOP();NOP();NOP();NOP();NOP();NOP();NOP();NOP();NOP();NOP();(*((volatile uint32_t*)(&CD_PORT)+1)) = (1<<(CD_PIN&31));
+#define CD_DATA              NOP_DELAY; NOP_DELAY; PIN_HIGH(CD_PORT, CD_PIN); NOP_DELAY; PIN_HIGH(CD_PORT, CD_PIN); NOP_DELAY;
 #else
 #define PIN_LOW(p, b)        (digitalWrite(b, LOW))
 #define PIN_HIGH(p, b)       (digitalWrite(b, HIGH))

@@ -8,8 +8,8 @@ The Arduino Library Manager should find and install MCUFRIEND_kbv library for yo
 2. Insert your Mcufriend style display shield into UNO.   Only 28-pin shields are supported.
 
 3. Build any of the Examples from the File->Examples->Mcufriend_kbv menu.  e.g.
- * `graphictest_kbv.ino`: shows all the methods.
- * `LCD_ID_readreg.ino`:  diagnostic check to identify unsupported controllers.
+    * `graphictest_kbv.ino`: shows all the methods.
+    * `LCD_ID_readreg.ino`:  diagnostic check to identify unsupported controllers.
 
 MCUFRIEND_kbv inherits all the methods from
 the Adafruit_GFX class: https://learn.adafruit.com/adafruit-gfx-graphics-library/overview

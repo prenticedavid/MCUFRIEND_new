@@ -9,6 +9,7 @@
 //#define USE_DUE_8BIT_PROTOSHIELD
 //#define USE_DUE_16BIT_SHIELD        //RD on PA15 (D24) 
 //#define USE_BOBCACHELOT_TEENSY
+//#define USE_TLT_CPORT_TEENSYPP2
 //#define USE_OPENSMART_SHIELD_PINOUT_UNO
 //#define USE_OPENSMART_SHIELD_PINOUT_MEGA
 //#define USE_OPENSMART_SHIELD_PINOUT_DUE //thanks Michel53
@@ -812,6 +813,36 @@ static __attribute((always_inline)) void write_8(uint8_t val)
 #define PIN_LOW(port, pin)    PASTE(port, _PCOR) =  (1<<(pin))
 #define PIN_HIGH(port, pin)   PASTE(port, _PSOR) =  (1<<(pin))
 #define PIN_OUTPUT(port, pin) PASTE(port, _PDDR) |= (1<<(pin))
+
+//################################### TEENSY++2.0 ##############################
+#elif defined(__AVR_AT90USB1286__)  && defined(USE_TLT_CPORT_TEENSYPP2)     //TEENSY++ 2.0 on the CPORT
+#warning  special for USE_TLT_CPORT_TEENSYPP2
+#define RD_PORT PORTF
+#define RD_PIN  0
+#define WR_PORT PORTF
+#define WR_PIN  1
+#define CD_PORT PORTF
+#define CD_PIN  2
+#define CS_PORT PORTF
+#define CS_PIN  3
+#define RESET_PORT PORTF
+#define RESET_PIN  4
+
+//map to PORTC to leave hardware serial pins D2/D3 free.
+#define write_8(x)   { PORTC = x;}
+#define read_8()      ( PINC )
+#define setWriteDir() { DDRC = 0xFF; }
+#define setReadDir()  { DDRC = 0x00; }
+
+#define write8(x)     { write_8(x); WR_STROBE; }
+#define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
+#define READ_8(dst)   { RD_STROBE; dst = read_8(); RD_IDLE; }
+#define READ_16(dst)  { uint8_t hi; READ_8(hi); READ_8(dst); dst |= (hi << 8); }
+
+#define PIN_LOW(p, b)        (p) &= ~(1<<(b))
+#define PIN_HIGH(p, b)       (p) |= (1<<(b))
+#define PIN_OUTPUT(p, b)     *(&p-1) |= (1<<(b))
+
 
 #elif defined(USE_MY_BLUEPILL) && (defined(ARDUINO_GENERIC_STM32F103C) || defined(ARDUINO_NUCLEO_F103C8))
 #warning Uno Shield on MY BLUEPILL

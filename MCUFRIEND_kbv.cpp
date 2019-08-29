@@ -18,10 +18,11 @@
 //#define SUPPORT_9225              //ILI9225-B, ILI9225-G ID=0x9225, ID=0x9226, ID=0x6813 +380 bytes
 //#define SUPPORT_9326_5420         //ILI9326, SPFD5420 +246 bytes
 //#define SUPPORT_9342              //costs +114 bytes
-//#define SUPPORT_9806              //UNTESTED
+#define SUPPORT_9806              //UNTESTED
 #define SUPPORT_9488_555          //costs +230 bytes, 0.03s / 0.19s
 #define SUPPORT_B509_7793         //R61509, ST7793 +244 bytes
 #define OFFSET_9327 32            //costs about 103 bytes, 0.08s
+#define OFFSET_9806 10            //480x854 panel on 480x864 controller
 
 #include "MCUFRIEND_kbv.h"
 #if defined(USE_SERIAL)
@@ -201,6 +202,8 @@ uint16_t MCUFRIEND_kbv::readID(void)
     ret = readReg(0x67);        //HX8347-A
     if (ret == 0x4747)
         return 0x8347;
+    ret = readReg(0xD3, 1);     //for ILI9806.  should be similar to readReg32(0xD3)
+    if (ret == 0x9806) return ret; //thanks indio99
 //#if defined(SUPPORT_1963) && USING_16BIT_BUS 
     ret = readReg32(0xA1);      //SSD1963: [01 57 61 01]
     if (ret == 0x6101)
@@ -266,8 +269,9 @@ uint16_t MCUFRIEND_kbv::readID(void)
     if (ret == 0x9163) return ret;
     ret = readReg32(0xD3);      //for ILI9488, 9486, 9340, 9341
     msb = ret >> 8;
-    if (msb == 0x93 || msb == 0x94 || msb == 0x98 || msb == 0x77 || msb == 0x16)
+    if (msb == 0x93 || msb == 0x94 || msb == 0x77 || msb == 0x16) {
         return ret;             //0x9488, 9486, 9340, 9341, 7796
+    }
     if (ret == 0x00D3 || ret == 0xD3D3)
         return ret;             //16-bit write-only bus
 /*
@@ -384,6 +388,10 @@ void MCUFRIEND_kbv::setRotation(uint8_t r)
             d[2] = 0x3B;
             WriteCmdParamN(0xB6, 3, d);
             goto common_MC;
+#if defined(SUPPORT_9806)
+        } else if (_lcd_ID == 0x9806) {
+            val &= ~0x10;   //remove ML
+#endif
         } else if (_lcd_ID == 0x1963 || _lcd_ID == 0x9481 || _lcd_ID == 0x1511) {
             if (val & 0x80)
                 val |= 0x01;    //GS
@@ -529,6 +537,12 @@ void MCUFRIEND_kbv::setAddrWindow(int16_t x, int16_t y, int16_t x1, int16_t y1)
 	if (_lcd_ID == 0x9327) {
 	    if (rotation == 2) y += OFFSET_9327, y1 += OFFSET_9327;
 	    if (rotation == 3) x += OFFSET_9327, x1 += OFFSET_9327;
+    }
+#endif
+#if defined(OFFSET_9806)
+	if (_lcd_ID == 0x9806) {
+	    if (rotation == 2) y += OFFSET_9806, y1 += OFFSET_9806;
+	    if (rotation == 3) x += OFFSET_9806, x1 += OFFSET_9806;
     }
 #endif
 #if 1
@@ -711,10 +725,19 @@ void MCUFRIEND_kbv::vertScroll(int16_t top, int16_t scrollines, int16_t offset)
 	    if (rotation == 2 || rotation == 3) top += OFFSET_9327;
     }
 #endif
+#if defined(OFFSET_9806)
+	if (_lcd_ID == 0x9806) {
+	    if (rotation == 2 || rotation == 3) {
+            top += OFFSET_9806;
+            offset = -offset;   //cos ML does not work
+        }
+    }
+#endif
     int16_t bfa = HEIGHT - top - scrollines;  // bottom fixed area
     int16_t vsp;
     int16_t sea = top;
 	if (_lcd_ID == 0x9327) bfa += 32;
+	if (_lcd_ID == 0x9806) bfa += 10;   //should keep 480x854 happy on 864 scanlines
     if (offset <= -scrollines || offset >= scrollines) offset = 0; //valid scroll
 	vsp = top + offset; // vertical start position
     if (offset < 0)
@@ -2854,35 +2877,35 @@ case 0x4532:    // thanks Leodino
 
 #ifdef SUPPORT_9806
     case 0x9806:
-        _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | READ_24BITS;
-        // from ZinggJM
+        _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | READ_24BITS | INVERT_RGB | INVERT_SS;
+        // from ZinggJM.  thanks indio99
         static const uint8_t ILI9806_regValues[] PROGMEM = {
-            (0xFF), 3, /* EXTC Command Set enable register*/ 0xFF, 0x98, 0x06,
-            (0xBA), 1, /* SPI Interface Setting*/0xE0,
+            (0xFF), 3, 0xFF, 0x98, 0x06,       // [FF 98 06] EXTC Command Set enable register
+            (0xBA), 1, 0xE0,                   // [E0] SPI Interface Setting single SDA pin
             (0xBC), 21, /* GIP 1*/0x03, 0x0F, 0x63, 0x69, 0x01, 0x01, 0x1B, 0x11, 0x70, 0x73, 0xFF, 0xFF, 0x08, 0x09, 0x05, 0x00, 0xEE, 0xE2, 0x01, 0x00, 0xC1,
             (0xBD), 8, /* GIP 2*/0x01, 0x23, 0x45, 0x67, 0x01, 0x23, 0x45, 0x67,
             (0xBE), 9, /* GIP 3*/0x00, 0x22, 0x27, 0x6A, 0xBC, 0xD8, 0x92, 0x22, 0x22,
-            (0xC7), 1, /* Vcom*/0x1E,
-            (0xED), 3, /* EN_volt_reg*/0x7F, 0x0F, 0x00,
-            (0xC0), 3, /* Power Control 1*/0xE3, 0x0B, 0x00,
-            (0xFC), 1, 0x08,
-            (0xDF), 6, /* Engineering Setting*/0x00, 0x00, 0x00, 0x00, 0x00, 0x02,
-            (0xF3), 1, /* DVDD Voltage Setting*/0x74,
-            (0xB4), 3, /* Display Inversion Control*/0x00, 0x00, 0x00,
-            (0xF7), 1, /* 480x854*/0x81,
-            (0xB1), 3, /* Frame Rate*/0x00, 0x10, 0x14,
-            (0xF1), 3, /* Panel Timing Control*/0x29, 0x8A, 0x07,
-            (0xF2), 4, /*Panel Timing Control*/0x40, 0xD2, 0x50, 0x28,
-            (0xC1), 4, /* Power Control 2*/0x17, 0x85, 0x85, 0x20,
+            (0xC7), 1, 0x1E,                   // [8F] Vcom
+            (0xED), 3, 0x7F, 0x0F, 0x00,       // [7F 07] EN_volt_reg
+            (0xC0), 3, 0xE3, 0x0B, 0x00,       // [03 0B 0A] Power Control 1
+            (0xFC), 1, 0x08,                   // [04] LVGL
+            (0xDF), 6, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, // [00 00 00 00 00 00 00] Engineering Setting
+            (0xF3), 1, 0x74,                   // [70] DVDD Voltage Setting
+            (0xB4), 3, 0x00, 0x00, 0x00,       // [xx xx xx] Display Inversion Control
+            (0xF7), 1, 0x80,                   // [80] 480x864 even though panel is 480x854
+            (0xB1), 3, 0x00, 0x10, 0x14,       // [xx xx xx] Frame Rate
+            (0xF1), 3, 0x29, 0x8A, 0x07,       // [29 CA 07] Panel Timing Control
+            (0xF2), 4, 0x40, 0xD2, 0x50, 0x28, // [40 D2 52 2A] Panel Timing Control
+            (0xC1), 4, 0x17, 0x85, 0x85, 0x20, // [17 90 90] Power Control 2
             (0xE0), 16, 0x00, 0x0C, 0x15, 0x0D, 0x0F, 0x0C, 0x07, 0x05, 0x07, 0x0B, 0x10, 0x10, 0x0D, 0x17, 0x0F, 0x00,
             (0xE1), 16, 0x00, 0x0D, 0x15, 0x0E, 0x10, 0x0D, 0x08, 0x06, 0x07, 0x0C, 0x11, 0x11, 0x0E, 0x17, 0x0F, 0x00,
-            (0x35), 1, /*Tearing Effect ON*/0x00,
+            (0x35), 1, 0x00,                   // [xx] Tearing Effect ON but output never used
         };
         table8_ads = ILI9806_regValues, table_size = sizeof(ILI9806_regValues);
         p16 = (int16_t *) & HEIGHT;
-        *p16 = 480;
+        *p16 = 854;   //panels can be 480x864, 480x854, 480x800, 480x840, 480x720 
         p16 = (int16_t *) & WIDTH;
-        *p16 = 854;
+        *p16 = 480;
         break;
 #endif
     default:

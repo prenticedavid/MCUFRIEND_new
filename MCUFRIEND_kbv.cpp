@@ -15,7 +15,7 @@
 //#define SUPPORT_8352B             //HX8352B
 //#define SUPPORT_8357D_GAMMA       //monster 34 byte 
 //#define SUPPORT_9163              //
-//#define SUPPORT_9225              //ILI9225-B, ILI9225-G ID=0x9225, ID=0x9226, ID=0x6813 +380 bytes
+#define SUPPORT_9225              //ILI9225-B, ILI9225-G ID=0x9225, ID=0x9226, ID=0x6813 +380 bytes
 //#define SUPPORT_9326_5420         //ILI9326, SPFD5420 +246 bytes
 //#define SUPPORT_9342              //costs +114 bytes
 //#define SUPPORT_9806              //UNTESTED
@@ -2125,7 +2125,53 @@ case 0x4532:    // thanks Leodino
 #define ILI9225C_INVOFF  0x20
 #define ILI9225C_INVON   0x21
 
-    case 0x6813:
+    case 0x6813:   //Raydium  RM68130
+    case 0x7775:   //Sitronix ST7775
+        _lcd_capable = REV_SCREEN | READ_BGR;     //
+        _lcd_ID = 0x9225; //User commands like ILI9225
+        // RM68130 sequence from OPEN-SMART
+        static const uint16_t RM68130_regValues[] PROGMEM = {
+            TFTLCD_DELAY, 50,
+            // VCI=2.8V, IOVCC=2.8V --- Gamma 2.4
+            //************* Start Initial Sequence **********//
+            0x28, 0x00CE, // Software Reset
+            0x01, 0x011C, // driver output control
+            0x03, 0x1030, // Entry mode
+            TFTLCD_DELAY, 50,
+            // n=1,2,3 бн 262K бн80-system 16-bit
+            // n=0 бн 65K бн80-system 16-bit
+            // n=1,2 бн 262K бн80-system 8-bit
+            // n=0,3 бн 65K бн80-system 8-bit
+            0x07, 0x0017, // Display control
+            0x11, 0x1000, // Power control
+            0x02, 0x0000, // LCD driving wave control 0 : Column Inversion
+            0xB0, 0x1412, // Power control(0c12)
+            0x0B, 0x0000, // Frame Rate Control 4-bit
+            //************* Start Gamma Setting **********//
+            0xE8, 0x0100, // Gamma Command 1 : Gamma Enable
+            0xB1, 0x0F0F, // +- Gamma Voltage Setting
+            0x50, 0x0003, // Below : Gamma Setting
+            0x51, 0x0807,
+            0x52, 0x0C08,
+            0x53, 0x0503,
+            0x54, 0x0003,
+            0x55, 0x0807,
+            0x56, 0x0003,
+            0x57, 0x0503,
+            0x58, 0x0000,
+            0x59, 0x0000,
+            0xE8, 0x0102, // ENABLE_CTRL
+            0xFB, 0x002A, // ?
+            0xE8, 0x0101, // ENABLE_CTRL 
+            0xF1, 0x0040, // ?
+        };
+        init_table16(RM68130_regValues, sizeof(RM68130_regValues));
+        p16 = (int16_t *) & HEIGHT;
+        *p16 = 220;
+        p16 = (int16_t *) & WIDTH;
+        *p16 = 176;
+        break;
+
     case 0x9226:
         _lcd_ID = 0x9225;                //fall through
     case 0x9225:

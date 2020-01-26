@@ -1,6 +1,7 @@
 //#define SUPPORT_0139              //S6D0139 +280 bytes
 #define SUPPORT_0154              //S6D0154 +320 bytes
 //#define SUPPORT_1289              //SSD1289,SSD1297 (ID=0x9797) +626 bytes, 0.03s
+#define SUPPORT_1503              //R61503 Untested
 //#define SUPPORT_1580              //R61580 Untested
 #define SUPPORT_1963              //only works with 16BIT bus anyway
 //#define SUPPORT_4532              //LGDP4532 +120 bytes.  thanks Leodino
@@ -465,6 +466,9 @@ void MCUFRIEND_kbv::setRotation(uint8_t r)
         default:
             _MC = 0x20, _MP = 0x21, _MW = 0x22, _SC = 0x50, _EC = 0x51, _SP = 0x52, _EP = 0x53;
             GS = (val & 0x80) ? (1 << 15) : 0;
+#ifdef SUPPORT_1503
+            if (_lcd_ID == 0x1503) WriteCmdData(0x70, GS | 0x1b00); else
+#endif
             WriteCmdData(0x60, GS | 0x2700);    // Gate Scan Line (0xA700)
           common_SS:
             SS_v = (val & 0x40) ? (1 << 8) : 0;
@@ -781,6 +785,12 @@ void MCUFRIEND_kbv::vertScroll(int16_t top, int16_t scrollines, int16_t offset)
         WriteCmdData(0x41, vsp);        //VL#
         break;
 #endif
+#ifdef SUPPORT_1503
+    case 0x1503:
+        WriteCmdData(0x71, (1 << 1) | _lcd_rev);        //VLE, REV
+        WriteCmdData(0x7A, vsp);        //VL#
+        break;
+#endif
 	case 0x5420:
     case 0x7793:
 	case 0x9326:
@@ -828,6 +838,11 @@ void MCUFRIEND_kbv::invertDisplay(boolean i)
         if (_lcd_rev)
             _lcd_drivOut |= (1 << 13);
         WriteCmdData(0x01, _lcd_drivOut);
+        break;
+#endif
+#ifdef SUPPORT_1503
+    case 0x1503:
+        WriteCmdData(0x71, (1 << 1) | _lcd_rev);        //VLE, REV
         break;
 #endif
 	case 0x5420:
@@ -1067,6 +1082,77 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
         };
         init_table16(SSD1289_regValues, sizeof(SSD1289_regValues));
         break;
+#endif
+
+#ifdef SUPPORT_1503
+    case 0x1503:
+        _lcd_capable = 0 | REV_SCREEN | READ_BGR; //arbitrary attributes
+        static const uint16_t R61503_regValues[] PROGMEM = { //from DEM 240320C TMH-PW-N
+            0x00, 0x0000,
+            0x00, 0x0000,
+            TFTLCD_DELAY, 100,
+            0x00, 0x0000,
+            0x00, 0x0000,
+            0x00, 0x0000,
+            0x00, 0x0000,
+            0xA4, 0x0001,
+            TFTLCD_DELAY, 100,
+            /* Power On Sequanece */
+            0x07, 0x0001,
+            0x18, 0x0001,
+            0x10, 0x11b0,
+            0x11, 0x0110,
+            0x12, 0x0036,
+            0x13, 0x8c18,
+            0x12, 0x0036,
+            0x14, 0x8000,
+            0x01, 0x0100,
+            0x02, 0x0700,
+            0x03, 0x1030,
+
+            0x04, 0x0000,
+            0x08, 0x0808,
+            0x09, 0x0000,
+            0x20, 0x0000,
+            0x21, 0x0000,
+            /* Gamma */
+
+            0x30, 0x0400,
+            0x31, 0x0506,
+            0x32, 0x0003,
+            0x33, 0x0202,
+            0x34, 0x0104,
+            0x35, 0x0004,
+            0x36, 0x0707,
+            0x37, 0x0303,
+            0x38, 0x0005,
+            0x39, 0x0500,
+            0x3A, 0x0E00,
+            /* Other */
+            0x70, 0x1b00,
+            TFTLCD_DELAY, 30,
+            0x71, 0x0001,
+            TFTLCD_DELAY, 30,
+
+            0x7a, 0x0000,
+            TFTLCD_DELAY, 30,
+            0x85, 0x0000,
+            0x90, 0x0008,
+            0x91, 0x0100,
+            0x92, 0x0001,
+            /* Display On Sequance */
+            0x07, 0x0001,
+            0x07, 0x0021,
+            0x12, 0x1138,
+            0x07, 0x0233,
+        };
+        init_table16(R61503_regValues, sizeof(R61503_regValues));
+        p16 = (int16_t *) & HEIGHT;
+        *p16 = 220;
+        p16 = (int16_t *) & WIDTH;
+        *p16 = 176;
+        break;
+
 #endif
 
     case 0x1511:                // Unknown from Levy

@@ -221,6 +221,70 @@ void write_8(uint8_t val)
 #define PIN_HIGH(p, b)       (p) |= (1<<(b))
 #define PIN_OUTPUT(p, b)     *(&p-1) |= (1<<(b))
 
+//####################################### NANO IOT 33 ############################
+#elif defined(__SAMD21G18A__) && defined(ARDUINO_SAMD_NANO_33_IOT)     //regular UNO shield on NANO IOT 33
+#warning building for NANO IOT 33 
+//LCD pins   |D7  |D6  |D5  |D4  |D3  |D2  |D1  |D0  | |RD |WR |RS  |CS  |RST |
+//SAMD21 pin |PA6 |PA4 |PA5 |PA7 |PB11|PB10|PA20|PA18| |PA2|PB2|PA11|PA10|PB08|
+#define WRITE_DELAY { WR_ACTIVE4; }
+#define IDLE_DELAY  { WR_IDLE2; }
+#define READ_DELAY  { RD_ACTIVE8;}
+// configure macros for the control pins
+#define RD_PORT PORT->Group[0] //PA02
+#define RD_PIN  2
+#define WR_PORT PORT->Group[1] //PB02
+#define WR_PIN  2
+#define CD_PORT PORT->Group[0] //PA11
+#define CD_PIN  11
+#define CS_PORT PORT->Group[0] //PA10
+#define CS_PIN  10
+#define RESET_PORT PORT->Group[1] //PB08
+#define RESET_PIN  8
+// configure macros for data bus
+#define AMASK         ((15<<4)|(1<<18)|(1<<20))
+#define BMASK         (3<<10)   //
+#define WRMASK        ((0<<22) | (1<<28) | (1<<30)) //
+#define RDMASK        ((1<<17) | (1<<28) | (1<<30)) //
+#define write_8(x)   { \
+        PORT->Group[0].OUTCLR.reg = AMASK; PORT->Group[1].OUTCLR.reg = BMASK;  \
+        PORT->Group[0].OUTSET.reg  = \
+                                     (((x) & (1<<0)) << 18) | (((x) & (1<<1)) << 20) | \
+                                     (((x) & (1<<4)) <<  3) | (((x) & (1<<5)) <<  0) | \
+                                     (((x) & (1<<6)) >>  2) | (((x) & (1<<7)) >>  1); \
+        PORT->Group[1].OUTSET.reg  = (((x) & (3<<2)) << 10); \
+    }
+
+#define read_8()      ( \
+                        ((PORT->Group[0].IN.reg & (1<<18)) >> 18)\
+                        | ((PORT->Group[0].IN.reg & (1<<20)) >> 19)\
+                        | ((PORT->Group[0].IN.reg & (1<<7)) >> 3)\
+                        | ((PORT->Group[0].IN.reg & (1<<5)) >> 0)\
+                        | ((PORT->Group[0].IN.reg & (1<<4)) << 2)\
+                        | ((PORT->Group[0].IN.reg & (1<<6)) << 1)\
+                        | ((PORT->Group[1].IN.reg & (3<<10)) >> 8)\
+                      )
+#define setWriteDir() { \
+        PORT->Group[0].DIRSET.reg = AMASK; \
+        PORT->Group[0].WRCONFIG.reg = (AMASK & 0xFFFF) | WRMASK; \
+        PORT->Group[1].DIRSET.reg = BMASK; \
+        PORT->Group[1].WRCONFIG.reg = (BMASK & 0xFFFF) | WRMASK; \
+    }
+#define setReadDir()  { \
+        PORT->Group[0].DIRCLR.reg = AMASK; \
+        PORT->Group[0].WRCONFIG.reg = (AMASK & 0xFFFF) | RDMASK; \
+        PORT->Group[1].DIRCLR.reg = BMASK; \
+        PORT->Group[1].WRCONFIG.reg = (BMASK & 0xFFFF) | RDMASK; \
+    }
+#define write8(x)     { write_8(x); WRITE_DELAY; WR_STROBE; IDLE_DELAY; }
+#define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
+#define READ_8(dst)   { RD_STROBE; READ_DELAY; dst = read_8(); RD_IDLE2; RD_IDLE; }
+#define READ_16(dst)  { uint8_t hi; READ_8(hi); READ_8(dst); dst |= (hi << 8); }
+
+// Shield Control macros.
+#define PIN_LOW(port, pin)    (port).OUTCLR.reg = (1<<(pin))
+#define PIN_HIGH(port, pin)   (port).OUTSET.reg = (1<<(pin))
+#define PIN_OUTPUT(port, pin) (port).DIRSET.reg = (1<<(pin))
+
 //################################# ZERO and M0_PRO ############################
 #elif defined(__SAMD21G18A__)   //regular UNO shield on ZERO or M0_PRO
 #include "sam.h"

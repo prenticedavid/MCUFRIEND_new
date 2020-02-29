@@ -248,10 +248,10 @@ void write_8(uint8_t val)
 #define write_8(x)   { \
         PORT->Group[0].OUTCLR.reg = AMASK; PORT->Group[1].OUTCLR.reg = BMASK;  \
         PORT->Group[0].OUTSET.reg  = \
-                                     (((x) & (1<<0)) << 18) | (((x) & (1<<1)) << 20) | \
+                                     (((x) & (1<<0)) << 18) | (((x) & (1<<1)) << 19) | \
                                      (((x) & (1<<4)) <<  3) | (((x) & (1<<5)) <<  0) | \
                                      (((x) & (1<<6)) >>  2) | (((x) & (1<<7)) >>  1); \
-        PORT->Group[1].OUTSET.reg  = (((x) & (3<<2)) << 10); \
+        PORT->Group[1].OUTSET.reg  = (((x) & (3<<2)) <<  8); \
     }
 
 #define read_8()      ( \

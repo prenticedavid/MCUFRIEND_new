@@ -303,6 +303,8 @@ void write_8(uint8_t val)
 #define DMASK 0x0030C3C0
  //  #define write_8(x) PORT->Group[0].OUT.reg = (PORT->Group[0].OUT.reg & ~DMASK)|(((x) & 0x0F) << 6)|(((x) & 0x30) << 10)|(((x) & 0xC0)<<14)
 #if defined(ARDUINO_SAMD_ZERO) || defined(ARDUINO_SAMD_ZERO)   // American ZERO
+//LCD pins   |D7  |D6  |D5  |D4  |D3  |D2  |D1  |D0  | |RD |WR |RS  |CS  |RST |
+//SAMD21 pin |PA21|PA20|PA15|PB8 |PB9 |PA14|PA7 |PA6 | |PA2|PB8|PB9 |PA4 |PA5 |
 #define write_8(x) {\
 	PORT->Group[0].OUTCLR.reg = DMASK;\
 	PORT->Group[0].OUTSET.reg = (((x) & 0x0B) << 6)\
@@ -317,6 +319,8 @@ void write_8(uint8_t val)
                    |((PORT->Group[0].IN.reg >> 10) & (1<<5))\
                    |((PORT->Group[0].IN.reg >> 14) & 0xC0))
 #else   //default to an M0_PRO on v1.6.5 or 1.7.6
+//LCD pins   |D7  |D6  |D5  |D4  |D3  |D2  |D1  |D0  | |RD |WR |RS  |CS  |RST |
+//SAMD21 pin |PA21|PA20|PA15|PA14|PB9 |PB8 |PA7 |PA6 | |PA2|PB8|PB9 |PA4 |PA5 |
 #define write_8(x) {\
 	PORT->Group[0].OUTCLR.reg = DMASK;\
 	PORT->Group[0].OUTSET.reg = (((x) & 0x0F) << 6)\

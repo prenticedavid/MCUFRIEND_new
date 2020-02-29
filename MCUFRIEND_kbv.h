@@ -8,6 +8,7 @@
 #define MCUFRIEND_KBV_H_   299
 
 //#define USE_SERIAL
+#define USE_MY_BLUEPILL
 
 #if ARDUINO < 101
 #define USE_GFX_KBV

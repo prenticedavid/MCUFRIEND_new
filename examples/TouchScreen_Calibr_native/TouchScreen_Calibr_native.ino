@@ -14,13 +14,17 @@
 #include <MCUFRIEND_kbv.h>
 MCUFRIEND_kbv tft;
 
+#if defined(USB_PID) && USB_PID == 0x804E // Arduino M0 Native
+#define Serial SerialUSB
+#endif
+
 // MCUFRIEND UNO shield shares pins with the TFT.
 #if defined(ESP32)
 int XP = 27, YP = 4, XM = 15, YM = 14;  //most common configuration
 #else
 int XP = 6, YP = A1, XM = A2, YM = 7;  //most common configuration
 //int XP = 7, YP = A2, XM = A1, YM = 6;  //next common configuration
-//int XP=PB7,XM=PA6,YP=PA7,YM=PB6; //BLUEPILL must have Analog for YP, XM 
+//int XP=PB7,XM=PA6,YP=PA7,YM=PB6; //BLUEPILL must have Analog for YP, XM
 #endif
 //#include <TouchScreen.h>         //Adafruit Library
 //TouchScreen ts(XP, YP, XM, YM, 300);   //re-initialised after diagnose
@@ -95,12 +99,14 @@ void showpins(int A, int D, int value, const char *msg)
 boolean diagnose_pins()
 {
     int i, j, value, Apins[2], Dpins[2], Values[2], found = 0;
+
     Serial.println(F("Making all control and bus pins INPUT_PULLUP"));
     Serial.println(F("Typical 30k Analog pullup with corresponding pin"));
     Serial.println(F("would read low when digital is written LOW"));
     Serial.println(F("e.g. reads ~25 for 300R X direction"));
     Serial.println(F("e.g. reads ~30 for 500R Y direction"));
     Serial.println(F(""));
+
     for (i = A0; i < A5; i++) pinMode(i, INPUT_PULLUP);
     for (i = 2; i < 10; i++) pinMode(i, INPUT_PULLUP);
     for (i = A0; i < A4; i++) {
@@ -131,79 +137,93 @@ boolean diagnose_pins()
                      (Values[i] < Values[!i]) ? "XM,XP: " : "YP,YM: ");
         }
         XM = Apins[!idx]; XP = Dpins[!idx]; YP = Apins[idx]; YM = Dpins[idx];
-//        ts = TouchScreen(XP, YP, XM, YM, 300);    //re-initialise with pins
+        //ts = TouchScreen(XP, YP, XM, YM, 300);    //re-initialise with pins
         ts = TouchScreen_kbv(XP, YP, XM, YM, 300);    //re-initialise with pins
         return true;                              //success
     }
     if (found == 0) Serial.println(F("MISSING TOUCHSCREEN"));
-    else Serial.println(F("BROKEN TOUCHSCREEN"));
+    //else Serial.println(F("BROKEN TOUCHSCREEN"));
     return false;
 }
 
 void setup()
 {
+    char buf[40];
+    uint16_t ID = tft.readID();
+    tft.begin(ID);
+    tft.fillScreen(TFT_NAVY);
+    tft.println("Waiting for Serial");
+    delay(1000);
     Serial.begin(9600);
+    while (!Serial);
+    tft.fillScreen(TFT_BLUE);
     Serial.println(TITLE);
     bool ret = true;
 #if defined(__arm__) || defined(ESP32)
     Serial.println(F("Not possible to diagnose Touch pins on ARM or ESP32"));
 #else
-    ret = diagnose_pins();
+    ret = diagnose_pins();  //destroys TFT pin modes
 #endif
-    uint16_t ID = tft.readID();
-    Serial.print("ID = 0x");
-    Serial.println(ID, HEX);
+    //uint16_t ID = tft.readID();
     tft.begin(ID);
     tft.setRotation(TOUCH_ORIENTATION);
     dispx = tft.width();
     dispy = tft.height();
     text_y_center = (dispy / 2) - 6;
+    sprintf(buf, "ID = 0x%04x", ID);
+    Serial.println(buf);
     if (ret == false) {
         centerprint("BROKEN TOUCHSCREEN", text_y_center);
-        while (true);    //just tread water
+        fail();
     }
 }
 
 void loop()
 {
     startup();
+    int lft = 10, rt = dispx - 11, top = 10, bot = dispy - 11;
+    int mdx = dispx / 2, mdy = dispy / 2, tmp;
 
     tft.fillScreen(BLACK);
-    drawCrossHair(dispx - 11, 10, GRAY);
-    drawCrossHair(dispx / 2, 10, GRAY);
-    drawCrossHair(10, 10, GRAY);
-    drawCrossHair(dispx - 11, dispy / 2, GRAY);
-    drawCrossHair(10, dispy / 2, GRAY);
-    drawCrossHair(dispx - 11, dispy - 11, GRAY);
-    drawCrossHair(dispx / 2, dispy - 11, GRAY);
-    drawCrossHair(10, dispy - 11, GRAY);
+    drawCrossHair(lft, top, GRAY);
+    drawCrossHair(mdx, top, GRAY);
+    drawCrossHair(rt, top, GRAY);
+    drawCrossHair(lft, mdy, GRAY);
+    drawCrossHair(rt, mdy, GRAY);
+    drawCrossHair(lft, bot, GRAY);
+    drawCrossHair(mdx, bot, GRAY);
+    drawCrossHair(rt, bot, GRAY);
     centerprint("***********", text_y_center - 12);
     centerprint("***********", text_y_center + 12);
 
-    calibrate(10, 10, 0, F(" LEFT, TOP, Pressure"));
-    calibrate(10, dispy / 2, 1, F(" LEFT, MIDH, Pressure"));
-    calibrate(10, dispy - 11, 2, F(" LEFT, BOT, Pressure"));
-    calibrate(dispx / 2, 10, 3, F(" MIDW, TOP, Pressure"));
-    calibrate(dispx / 2, dispy - 11, 4, F(" MIDW, BOT, Pressure"));
-    calibrate(dispx - 11, 10, 5, F(" RT, TOP, Pressure"));
-    calibrate(dispx - 11, dispy / 2, 6, F(" RT, MIDH, Pressure"));
-    calibrate(dispx - 11, dispy - 11, 7, F(" RT, BOT, Pressure"));
+    calibrate(lft, top, 0, F(" LEFT, TOP, Pressure"));
+    calibrate(lft, mdy, 1, F(" LEFT, MIDH, Pressure"));
+    calibrate(lft, bot, 2, F(" LEFT, BOT, Pressure"));
+    calibrate(mdx, top, 3, F(" MIDW, TOP, Pressure"));
+    calibrate(mdx, bot, 4, F(" MIDW, BOT, Pressure"));
+    calibrate(rt, top, 5, F(" RT, TOP, Pressure"));
+    calibrate(rt, mdy, 6, F(" RT, MIDH, Pressure"));
+    calibrate(rt, bot, 7, F(" RT, BOT, Pressure"));
 
     cals = (long(dispx - 1) << 12) + (dispy - 1);
     if (TOUCH_ORIENTATION == PORTRAIT) swapxy = rx[2] - rx[0];
     else swapxy = ry[2] - ry[0];
     swapxy = (swapxy < -500 || swapxy > 500);
     if ((TOUCH_ORIENTATION == PORTRAIT) ^ (swapxy != 0)) {
-        clx = (rx[0] + rx[1] + rx[2]) / 3;
-        crx = (rx[5] + rx[6] + rx[7]) / 3;
-        cty = (ry[0] + ry[3] + ry[5]) / 3;
-        cby = (ry[2] + ry[4] + ry[7]) / 3;
+        clx = (rx[0] + rx[1] + rx[2]);
+        crx = (rx[5] + rx[6] + rx[7]);
+        cty = (ry[0] + ry[3] + ry[5]);
+        cby = (ry[2] + ry[4] + ry[7]);
     } else {
-        clx = (ry[0] + ry[1] + ry[2]) / 3;
-        crx = (ry[5] + ry[6] + ry[7]) / 3;
-        cty = (rx[0] + rx[3] + rx[5]) / 3;
-        cby = (rx[2] + rx[4] + rx[7]) / 3;
+        clx = (ry[0] + ry[1] + ry[2]);
+        crx = (ry[5] + ry[6] + ry[7]);
+        cty = (rx[0] + rx[3] + rx[5]);
+        cby = (rx[2] + rx[4] + rx[7]);
     }
+    clx /= 3;
+    crx /= 3;
+    cty /= 3;
+    cby /= 3;
     px = float(crx - clx) / (dispx - 20);
     py = float(cby - cty) / (dispy - 20);
     //  px = 0;
@@ -228,6 +248,7 @@ void readCoordinates()
     int cnt = 0;
     uint32_t tx = 0;
     uint32_t ty = 0;
+    uint32_t tz = 0;
     boolean OK = false;
 
     while (OK == false)
@@ -240,10 +261,11 @@ void readCoordinates()
         do
         {
             readResistiveTouch();
-            if (tp.z > 20)
+            if (tp.z > 200)  //.kbv
             {
                 tx += tp.x;
                 ty += tp.y;
+                tz += tp.z;
                 cnt++;
             }
             else
@@ -257,6 +279,7 @@ void readCoordinates()
         {
             tx = 0;
             ty = 0;
+            tz = 0;
             cnt = 0;
         }
         if (failcount >= 10000)
@@ -265,7 +288,7 @@ void readCoordinates()
 
     cx = tx / iter;
     cy = ty / iter;
-    cz = tp.z;
+    cz = tz / iter;
 }
 
 void calibrate(int x, int y, int i, String msg)
@@ -310,53 +333,47 @@ void report()
         tmp = TS_WID, TS_WID = TS_HT, TS_HT = tmp;
     }
     tft.setCursor(0, 120);
-    Serial.println("");
+    Serial.println("\n");
     sprintf(buf, "MCUFRIEND_kbv ID=0x%04X  %d x %d",
             tft.readID(), TS_WID, TS_HT);
     tft.println(buf);
     Serial.println(buf);
-    sprintf(buf, "\nconst int XP=%d,XM=A%d,YP=A%d,YM=%d; //%dx%d ID=0x%04X", 
+    sprintf(buf, "const int XP=%d,XM=A%d,YP=A%d,YM=%d; //%dx%d ID=0x%04X",
             XP, XM - A0, YP - A0, YM, TS_WID, TS_HT, tft.readID());
     Serial.println(buf);
-    sprintf(buf, "const int TS_LEFT=%d,TS_RT=%d,TS_TOP=%d,TS_BOT=%d;", 
+    sprintf(buf, "const int TS_LEFT=%d,TS_RT=%d,TS_TOP=%d,TS_BOT=%d;",
             TS_LEFT, TS_RT, TS_TOP, TS_BOT);
     Serial.println(buf);
-    sprintf(buf, "PORTRAIT CALIBRATION     %d x %d", TS_WID, TS_HT);
-    tft.println("");
-    tft.println(buf);
-    Serial.println(buf);
-    sprintf(buf, "x = map(p.x, LEFT=%d, RT=%d, 0, %d)", TS_LEFT, TS_RT, TS_WID);
-    tft.println(buf);
-    Serial.println(buf);
-    sprintf(buf, "y = map(p.y, TOP=%d, BOT=%d, 0, %d)", TS_TOP, TS_BOT, TS_HT);
-    tft.println(buf);
-    Serial.println(buf);
-    sprintf(buf, "Touch Pin Wiring XP=%d XM=%s YP=%s YM=%d",
+
+#if !defined(ARDUINO_AVR_LEONARDO)
+    for (int orient = 0; orient < 2; orient++) {
+        sprintf(buf, "\n%s CALIBRATION     %d x %d",
+                orient ? "LANDSCAPE" : "PORTRAIT ", TS_WID, TS_HT);
+        tft.println(buf);
+        Serial.println(buf);
+        sprintf(buf, "x = map(p.%s, LEFT=%d, RT=%d, 0, %d)",
+                orient ? "y" : "x", TS_LEFT, TS_RT, TS_WID);
+        tft.println(buf);
+        Serial.println(buf);
+        sprintf(buf, "y = map(p.%s, TOP=%d, BOT=%d, 0, %d)",
+                orient ? "x" : "y", TS_TOP, TS_BOT, TS_HT);
+        tft.println(buf);
+        Serial.println(buf);
+        tmp = TS_LEFT, TS_LEFT = TS_TOP, TS_TOP = TS_RT, TS_RT = TS_BOT, TS_BOT = tmp;
+        tmp = TS_WID, TS_WID = TS_HT, TS_HT = tmp;
+    }
+    sprintf(buf, "\nTouch Pin Wiring XP=%d XM=%s YP=%s YM=%d",
             XP, Aval(XM), Aval(YP), YM);
-    tft.println("");
-    tft.println(buf);
-    Serial.println(buf);
-
-    tmp = TS_LEFT, TS_LEFT = TS_TOP, TS_TOP = TS_RT, TS_RT = TS_BOT, TS_BOT = tmp;
-    tmp = TS_WID, TS_WID = TS_HT, TS_HT = tmp;
-
-    sprintf(buf, "LANDSCAPE CALIBRATION    %d x %d", TS_WID, TS_HT);
-    tft.println("");
-    tft.println(buf);
-    Serial.println(buf);
-    sprintf(buf, "x = map(p.y, LEFT=%d, RT=%d, 0, %d)", TS_LEFT, TS_RT, TS_WID);
-    tft.println(buf);
-    Serial.println(buf);
-    sprintf(buf, "y = map(p.x, TOP=%d, BOT=%d, 0, %d)", TS_TOP, TS_BOT, TS_HT);
     tft.println(buf);
     Serial.println(buf);
 
     int16_t x_range = TS_LEFT - TS_RT, y_range = TS_TOP - TS_BOT;
-    if (abs(x_range) > 800 && abs(y_range) > 700) //LANDSCAPE
+    if (abs(x_range) > 650 && abs(y_range) > 750) //LANDSCAPE
         return;
     sprintf(buf, "\n*** UNUSUAL CALIBRATION RANGES %d %d", x_range, y_range);
     tft.println(buf);
     Serial.println(buf);
+#endif
 }
 
 void drawCrossHair(int x, int y, uint16_t color)
@@ -391,13 +408,10 @@ void startup()
     tft.println(F("#define NUMSAMPLES 3 in Library\n"));
     tft.println(F("Use a stylus or something"));
     tft.println(F("similar to touch as close"));
-    tft.println(F("to the center of the"));
-    tft.println(F("highlighted crosshair as"));
-    tft.println(F("possible. Keep as still as"));
-    tft.println(F("possible and keep holding"));
-    tft.println(F("until the highlight is"));
-    tft.println(F("removed. Repeat for all"));
-    tft.println(F("crosshairs in sequence.\n"));
+    tft.println(F("to the center of the WHITE"));
+    tft.println(F("crosshair.  Keep holding"));
+    tft.println(F("until crosshair turns RED."));
+    tft.println(F("Repeat for all crosshairs."));
     tft.println(F("Report can be pasted from Serial\n"));
     tft.println(F("Touch screen to continue"));
 

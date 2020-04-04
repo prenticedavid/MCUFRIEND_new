@@ -1065,6 +1065,62 @@ static void setReadDir()
 #define PIN_HIGH(p, b)       (digitalWrite(b, HIGH))
 #define PIN_OUTPUT(p, b)     (pinMode(b, OUTPUT))
 
+
+//################################### PIC32 CHIPKIT UNO32   ############################
+#elif defined (__PIC32MX3XX__)
+#warning Uno Shield on CHIPKIT UNO32
+
+//LCD pins  |D7 |D6 |D5 |D4 |D3 |D2 |D1 |D0  | |RD |WR |RS |CS  |RST |
+//PIC32 pin |PD9|PD2|PD1|PF1|PD0|PD8|PD3|PD10| |PB2|PB4|PB8|PB10|PB12|
+//                                                              |RG3 | set with JP6
+
+#define RD_PORT LATB
+#define RD_PIN  2
+#define WR_PORT LATB
+#define WR_PIN  4
+#define CD_PORT LATB
+#define CD_PIN  8
+#define CS_PORT LATB
+#define CS_PIN  10
+#define RESET_PORT LATB
+#define RESET_PIN  12
+
+#define FMASK		  0x02
+#define DMASK         0x070F   
+			
+#define write_8(x)    { LATF &= ~FMASK; \
+						LATD &= ~DMASK; \
+						LATD |= (((x) & (1<<0)) << 10); \
+						LATD |= (((x) & (1<<1)) << 2); \
+						LATD |= (((x) & (1<<2)) << 6); \
+						LATD |= (((x) & (1<<3)) >> 3); \
+						LATF |= (((x) & (1<<4)) >> 3); \
+						LATD |= (((x) & (3<<5)) >> 4); \
+						LATD |= (((x) & (1<<7)) << 2);	}
+
+#define read_8()       (((PORTD & (1<<10) ) >> 10)| \
+						((PORTD & (1<<3) ) >> 2) | \
+						((PORTD & (1<<8) ) >> 6) | \
+						((PORTD & (1<<0) )  << 3) | \
+						((PORTF & FMASK)  << 3) | \
+						((PORTD & (3<<1) )  << 4) | \
+						((PORTD & (1<<9) )  >> 2) )
+						
+#define setReadDir()  { TRISF |=  FMASK; TRISD |=  DMASK; }
+#define setWriteDir() { TRISF &= ~FMASK; TRISD &= ~DMASK; }
+#define WRITE_DELAY   { WR_ACTIVE2; }   //80MHz M4 needs 2, 5, 0
+#define READ_DELAY    { RD_ACTIVE4; }   //
+#define IDLE_DELAY    { WR_IDLE; }      //
+#define write8(x)     { write_8(x); WRITE_DELAY; WR_STROBE; IDLE_DELAY; }
+#define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
+#define READ_8(dst)   { RD_STROBE; READ_DELAY; dst = read_8(); RD_IDLE2; }
+#define READ_16(dst)  { uint8_t hi; READ_8(hi); READ_8(dst); dst |= (hi << 8); }
+
+#define PIN_LOW(p, b)        (p) &= ~(1<<(b))
+#define PIN_HIGH(p, b)       (p) |= (1<<(b))
+//#define PIN_OUTPUT(p, b)     { *(&p+16) &= ~(1<<(b)); *(&p-32) &= ~(1<<(b)); }
+#define PIN_OUTPUT(p, b)     { ODCB &= ~(1<<(b)); TRISB &= ~(1<<(b)); } //if all ctl on LATB
+
 #else
 #error MCU unsupported
 #endif                          // regular UNO shields on Arduino boards

@@ -1088,15 +1088,16 @@ static void setReadDir()
 #define FMASK		  0x02
 #define DMASK         0x070F   
 			
-#define write_8(x)    { LATF &= ~FMASK; \
-						LATD &= ~DMASK; \
-						LATD |= (((x) & (1<<0)) << 10); \
-						LATD |= (((x) & (1<<1)) << 2); \
-						LATD |= (((x) & (1<<2)) << 6); \
-						LATD |= (((x) & (1<<3)) >> 3); \
-						LATF |= (((x) & (1<<4)) >> 3); \
-						LATD |= (((x) & (3<<5)) >> 4); \
-						LATD |= (((x) & (1<<7)) << 2);	}
+#define write_8(x)    { LATFCLR = FMASK; \
+						LATDCLR = DMASK; \
+						LATDSET = (((x) & (1<<0)) << 10) \
+						        | (((x) & (1<<1)) << 2) \
+						        | (((x) & (1<<2)) << 6) \
+						        | (((x) & (1<<3)) >> 3) \
+						        | (((x) & (3<<5)) >> 4) \
+						        | (((x) & (1<<7)) << 2);	\
+                        LATFSET = (((x) & (1<<4)) >> 3); \
+                      }
 
 #define read_8()       (((PORTD & (1<<10) ) >> 10)| \
 						((PORTD & (1<<3) ) >> 2) | \
@@ -1116,10 +1117,11 @@ static void setReadDir()
 #define READ_8(dst)   { RD_STROBE; READ_DELAY; dst = read_8(); RD_IDLE2; }
 #define READ_16(dst)  { uint8_t hi; READ_8(hi); READ_8(dst); dst |= (hi << 8); }
 
-#define PIN_LOW(p, b)        (p) &= ~(1<<(b))
-#define PIN_HIGH(p, b)       (p) |= (1<<(b))
-//#define PIN_OUTPUT(p, b)     { *(&p+16) &= ~(1<<(b)); *(&p-32) &= ~(1<<(b)); }
-#define PIN_OUTPUT(p, b)     { ODCB &= ~(1<<(b)); TRISB &= ~(1<<(b)); } //if all ctl on LATB
+#define PASTE(x, y) x ## y
+
+#define PIN_LOW(port, pin)  PASTE(port, CLR) = (1<<(pin))
+#define PIN_HIGH(port, pin) PASTE(port, SET) = (1<<(pin))
+#define PIN_OUTPUT(p, b)    { ODCB &= ~(1<<(b)); TRISB &= ~(1<<(b)); } //if all ctl on LATB
 
 #else
 #error MCU unsupported

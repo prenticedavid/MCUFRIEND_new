@@ -1067,7 +1067,7 @@ static void setReadDir()
 
 
 //################################### PIC32 CHIPKIT UNO32   ############################
-#elif defined (__PIC32MX3XX__)
+#elif defined (__PIC32MX3XX__)  //thanks domTheQuaker. 1.97s for 320x480
 #warning Uno Shield on CHIPKIT UNO32
 
 //LCD pins  |D7 |D6 |D5 |D4 |D3 |D2 |D1 |D0  | |RD |WR |RS |CS  |RST |
@@ -1109,9 +1109,9 @@ static void setReadDir()
 						
 #define setReadDir()  { TRISF |=  FMASK; TRISD |=  DMASK; }
 #define setWriteDir() { TRISF &= ~FMASK; TRISD &= ~DMASK; }
-#define WRITE_DELAY   { WR_ACTIVE2; }   //80MHz M4 needs 2, 5, 0
-#define READ_DELAY    { RD_ACTIVE4; }   //
-#define IDLE_DELAY    { WR_IDLE; }      //
+#define WRITE_DELAY   { }               //80MHz PIC32 needs 0, 3, 0
+#define READ_DELAY    { RD_ACTIVE4; }   //0, 4, 0 is safer
+#define IDLE_DELAY    { }               //
 #define write8(x)     { write_8(x); WRITE_DELAY; WR_STROBE; IDLE_DELAY; }
 #define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
 #define READ_8(dst)   { RD_STROBE; READ_DELAY; dst = read_8(); RD_IDLE2; }

@@ -862,59 +862,12 @@ static void init_table16(const void *table, int16_t size)
 
 void MCUFRIEND_kbv::begin(uint16_t ID)
 {
-    int16_t *p16;               //so we can "write" to a const protected variable.
+//    int16_t *p16;               //so we can "write" to a const protected variable.
     const uint8_t *table8_ads = NULL;
-    int16_t table_size;
+    int16_t table_size, screen_width = 240, screen_height = 320;
     reset();
     _lcd_xor = 0;
     switch (_lcd_ID = ID) {
-/*
-	static const uint16_t _regValues[] PROGMEM = {
-    0x0000, 0x0001, // start oscillation
-    0x0007, 0x0000, //  source output control 0 D0 
-    0x0013, 0x0000, // power control 3 off
-    0x0011, 0x2604, //    
-    0x0014, 0x0015, //   
-    0x0010, 0x3C00, //  
- //    0x0013, 0x0040, // 
- //    0x0013, 0x0060, //     
- //    0x0013, 0x0070, // 
-    0x0013, 0x0070, // power control 3 PON PON1 AON
-       
-    0x0001, 0x0127, //      driver output control
- //    0x0002, 0x0700, //  field 0 b/c waveform xor waveform
-    0x0003, 0x1030, //    
-    0x0007, 0x0000, //    
-    0x0008, 0x0404, //    
-    0x000B, 0x0200, // 
-    0x000C, 0x0000, //   
-    0x00015,0x0000, //     
-       
-    //gamma setting    
-    0x0030, 0x0000,      
-    0x0031, 0x0606,    
-    0x0032, 0x0006,    
-    0x0033, 0x0403,  
-    0x0034, 0x0107,  
-    0x0035, 0x0101, 
-    0x0036, 0x0707,   
-    0x0037, 0x0304,   
-    0x0038, 0x0A00,     
-    0x0039, 0x0706,     
-       
-    0x0040, 0x0000,     
-    0x0041, 0x0000,      
-    0x0042, 0x013F,    
-    0x0043, 0x0000,   
-    0x0044, 0x0000,     
-    0x0045, 0x0000,     
-    0x0046, 0xEF00,    
-    0x0047, 0x013F,     
-    0x0048, 0x0000,     
-    0x0007, 0x0011,  
-    0x0007, 0x0017,     
-};
-*/
 #ifdef SUPPORT_0139
     case 0x0139:
         _lcd_capable = REV_SCREEN | XSA_XEA_16BIT;    //remove AUTO_READINC
@@ -1054,10 +1007,8 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
 			0xB0, 1, 0x00,       //Command Access Protect
         };
         table8_ads = R61511_regValues, table_size = sizeof(R61511_regValues);
-        p16 = (int16_t *) & HEIGHT;
-        *p16 = 480;
-        p16 = (int16_t *) & WIDTH;
-        *p16 = 320;
+        screen_width = 320;
+        screen_height = 480;
         break;
 
     case 0x1520:
@@ -1342,10 +1293,8 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
 //        table8_ads = SSD1963_NHD_70_regValues, table_size = sizeof(SSD1963_NHD_70_regValues);
 //        table8_ads = SSD1963_800NEW_regValues, table_size = sizeof(SSD1963_800NEW_regValues);
 //        table8_ads = SSD1963_800ALT_regValues, table_size = sizeof(SSD1963_800ALT_regValues);
-        p16 = (int16_t *) & HEIGHT;
-        *p16 = 480;
-        p16 = (int16_t *) & WIDTH;
-        *p16 = 800;
+        screen_width = 800;
+        screen_height = 480;
         break;
 #endif
 
@@ -1460,10 +1409,8 @@ case 0x4532:    // thanks Leodino
             TFTLCD_DELAY8, 10,    //just some dummy
         };
         table8_ads = NT35310_regValues, table_size = sizeof(NT35310_regValues);
-        p16 = (int16_t *) & HEIGHT;
-        *p16 = 480;
-        p16 = (int16_t *) & WIDTH;
-        *p16 = 320;
+        screen_width = 320;
+        screen_height = 480;
         break;
 
 #ifdef SUPPORT_68140
@@ -1473,10 +1420,8 @@ case 0x4532:    // thanks Leodino
             0x3A, 1, 0x55,      //Pixel format .kbv my Mega Shield
         };
         table8_ads = RM68140_regValues_max, table_size = sizeof(RM68140_regValues_max);
-        p16 = (int16_t *) & HEIGHT;
-        *p16 = 480;
-        p16 = (int16_t *) & WIDTH;
-        *p16 = 320;
+        screen_width = 320;
+        screen_height = 480;
         break;
 #endif
 
@@ -1498,10 +1443,8 @@ case 0x4532:    // thanks Leodino
             0xC5, 1, 0x0E,              // [05] VMCTR1 VCOM
         };
         table8_ads = table7735S, table_size = sizeof(table7735S);   //
-        p16 = (int16_t *) & HEIGHT;
-        *p16 = 160;
-        p16 = (int16_t *) & WIDTH;
-        *p16 = 128;
+        screen_width = 128;
+        screen_height = 160;
         break;
 #endif
 
@@ -1694,8 +1637,7 @@ case 0x4532:    // thanks Leodino
             0x55, 1, 0x06,      //SM_PANEL=0, SS_PANEL=0, GS_PANEL=1, REV_PANEL=1, BGR_PANEL=0
         };
         init_table(HX8352A_regValues, sizeof(HX8352A_regValues));
-        p16 = (int16_t *) & HEIGHT;
-        *p16 = 400;
+        screen_height = 400;
         break;
 #endif
 
@@ -1751,8 +1693,7 @@ case 0x4532:    // thanks Leodino
 
         };
         init_table(HX8352B_regValues, sizeof(HX8352B_regValues));
-        p16 = (int16_t *) & HEIGHT;
-        *p16 = 400;
+        screen_height = 400;
         break;
 #endif
 
@@ -1962,10 +1903,8 @@ case 0x4532:    // thanks Leodino
             TFTLCD_DELAY8, 1,  //dummy table
         };
         table8_ads = HX8357C_regValues, table_size = sizeof(HX8357C_regValues);
-        p16 = (int16_t *) & HEIGHT;
-        *p16 = 480;
-        p16 = (int16_t *) & WIDTH;
-        *p16 = 320;
+        screen_width = 320;
+        screen_height = 480;
         break;
 
     case 0x0099:                //HX8357-D matches datasheet
@@ -1983,10 +1922,8 @@ case 0x4532:    // thanks Leodino
 #endif
         };
         table8_ads = HX8357_99_regValues, table_size = sizeof(HX8357_99_regValues);
-        p16 = (int16_t *) & HEIGHT;
-        *p16 = 480;
-        p16 = (int16_t *) & WIDTH;
-        *p16 = 320;
+        screen_width = 320;
+        screen_height = 480;
         break;
 
 #ifdef SUPPORT_8230
@@ -2057,10 +1994,8 @@ case 0x4532:    // thanks Leodino
             0xC7, 1, 0,          // [40] VCOMOFFS
         };
         table8_ads = table9163C, table_size = sizeof(table9163C);   //
-        p16 = (int16_t *) & HEIGHT;
-        *p16 = 160;
-        p16 = (int16_t *) & WIDTH;
-        *p16 = 128;
+        screen_width = 128;
+        screen_height = 160;
         break;
 #endif
 
@@ -2172,10 +2107,8 @@ case 0x4532:    // thanks Leodino
             ILI9225_DISP_CTRL1, 0x1017,
         };
         init_table16(ILI9225_regValues, sizeof(ILI9225_regValues));
-        p16 = (int16_t *) & HEIGHT;
-        *p16 = 220;
-        p16 = (int16_t *) & WIDTH;
-        *p16 = 176;
+        screen_width = 176;
+        screen_height = 220;
         break;
 #endif
 
@@ -2388,10 +2321,7 @@ case 0x4532:    // thanks Leodino
          0x0007, 0x0173,     //  262K color and display ON
 		 };
         init_table16(ILI9326_CPT28_regValues, sizeof(ILI9326_CPT28_regValues));
-        p16 = (int16_t *) & HEIGHT;
-        *p16 = 400;
-        p16 = (int16_t *) & WIDTH;
-        *p16 = 240;
+        screen_height = 400;
         break;
 #endif
 
@@ -2413,10 +2343,7 @@ case 0x4532:    // thanks Leodino
             //                     0xB0, 1, 0x03,      //Enable Protect
         };
         table8_ads = ILI9327_regValues, table_size = sizeof(ILI9327_regValues);
-        p16 = (int16_t *) & HEIGHT;
-        *p16 = 400;
-        p16 = (int16_t *) & WIDTH;
-        *p16 = 240;
+        screen_height = 400;
         break;
     case 0x1602:
         _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS; //does not readGRAM
@@ -2532,10 +2459,8 @@ case 0x4532:    // thanks Leodino
         table8_ads = ILI9342_regValues_CPT24, table_size = sizeof(ILI9342_regValues_CPT24);   //
         //        table8_ads = ILI9342_regValues_Tianma23, table_size = sizeof(ILI9342_regValues_Tianma23);   //
         //        table8_ads = ILI9342_regValues_HSD23, table_size = sizeof(ILI9342_regValues_HSD23);   //
-        p16 = (int16_t *) & HEIGHT;
-        *p16 = 240;
-        p16 = (int16_t *) & WIDTH;
-        *p16 = 320;
+        screen_width = 320;
+        screen_height = 240;
         break;
 #endif
     case 0x1581:                        //no BGR in MADCTL.  set BGR in Panel Control
@@ -2633,10 +2558,8 @@ case 0x4532:    // thanks Leodino
 //        table8_ads = ILI9481_AUO317_regValues, table_size = sizeof(ILI9481_AUO317_regValues);
 //        table8_ads = ILI9481_CMO35_regValues, table_size = sizeof(ILI9481_CMO35_regValues);
 //        table8_ads = ILI9481_RGB_regValues, table_size = sizeof(ILI9481_RGB_regValues);
-        p16 = (int16_t *) & HEIGHT;
-        *p16 = 480;
-        p16 = (int16_t *) & WIDTH;
-        *p16 = 320;
+        screen_width = 320;
+        screen_height = 480;
         break;
     case 0x9486:
         _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS; //Red 3.5", Blue 3.5"
@@ -2680,10 +2603,8 @@ case 0x4532:    // thanks Leodino
 #endif
         };
         table8_ads = ILI9486_regValues, table_size = sizeof(ILI9486_regValues);
-        p16 = (int16_t *) & HEIGHT;
-        *p16 = 480;
-        p16 = (int16_t *) & WIDTH;
-        *p16 = 320;
+        screen_width = 320;
+        screen_height = 480;
         break;
     case 0x7796:
         _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS;   //thanks to safari1
@@ -2692,10 +2613,8 @@ case 0x4532:    // thanks Leodino
             0xE8, 8, 0x40, 0x8A, 0x00, 0x00, 0x29, 0x19, 0xA5, 0x33, //Adj3 [40 8A 00 00 25 0A 38 33]
         };
         table8_ads = ST7796_regValues, table_size = sizeof(ST7796_regValues);
-        p16 = (int16_t *) & HEIGHT;
-        *p16 = 480;
-        p16 = (int16_t *) & WIDTH;
-        *p16 = 320;
+        screen_width = 320;
+        screen_height = 480;
         break;
         //goto common_9488;
     case 0x9487:                //with thanks to Charlyf
@@ -2716,10 +2635,8 @@ case 0x4532:    // thanks Leodino
             0xF7, 4, 0xA9, 0x51, 0x2C, 0x82,    //Adjustment Control 3 [A9 51 2C 82]
         };
         table8_ads = ILI9488_regValues_max, table_size = sizeof(ILI9488_regValues_max);
-        p16 = (int16_t *) & HEIGHT;
-        *p16 = 480;
-        p16 = (int16_t *) & WIDTH;
-        *p16 = 320;
+        screen_width = 320;
+        screen_height = 480;
         break;
     case 0xB505:                //R61505V
     case 0xC505:                //R61505W
@@ -2839,8 +2756,7 @@ case 0x4532:    // thanks Leodino
             0x0201, 0x0000,
         };
         init_table16(R61509V_regValues, sizeof(R61509V_regValues));
-        p16 = (int16_t *) & HEIGHT;
-        *p16 = 400;
+        screen_height = 400;
         break;
 #endif
 
@@ -2871,17 +2787,19 @@ case 0x4532:    // thanks Leodino
             (0x35), 1, /*Tearing Effect ON*/0x00,
         };
         table8_ads = ILI9806_regValues, table_size = sizeof(ILI9806_regValues);
-        p16 = (int16_t *) & HEIGHT;
-        *p16 = 480;
-        p16 = (int16_t *) & WIDTH;
-        *p16 = 854;
+        screen_width = 854;
+        screen_height = 480;
         break;
 #endif
     default:
-        p16 = (int16_t *) & WIDTH;
-        *p16 = 0;       //error value for WIDTH
+        screen_width = 0; //error value for WIDTH
         break;
     }
+    int16_t *p16;               //so we can "write" to a const protected variable.
+    p16 = (int16_t *) & WIDTH;
+    *p16 = screen_width;      
+    p16 = (int16_t *) & HEIGHT;
+    *p16 = screen_height;      
     _lcd_rev = ((_lcd_capable & REV_SCREEN) != 0);
     if (table8_ads != NULL) {
         static const uint8_t reset_off[] PROGMEM = {

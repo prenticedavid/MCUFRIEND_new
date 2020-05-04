@@ -52,7 +52,9 @@
 
 #define INV_REG_07      (1<<0)
 #define INV_REG_0401    (1<<1)
-//#define INV_REG_07      (1<<0)
+#define VSP_REG_41      (1<<2)
+#define VSP_REG_0404    (1<<3)
+#define SEA_REG_31      (1<<4)
 
 #if (defined(USES_16BIT_BUS))   //only comes from SPECIALs
 #define USING_16BIT_BUS 1
@@ -707,19 +709,6 @@ void MCUFRIEND_kbv::vertScroll(int16_t top, int16_t scrollines, int16_t offset)
     sea = top + scrollines - 1;
     if (_lcd_capable & MIPI_DCS_REV1) {
         uint8_t d[6];           // for multi-byte parameters
-/*
-        if (_lcd_ID == 0x9327) {        //panel is wired for 240x432 
-            if (rotation == 2 || rotation == 3) { //180 or 270 degrees
-                if (scrollines == HEIGHT) {
-                    scrollines = 432;   // we get a glitch but hey-ho
-                    vsp -= 432 - HEIGHT;
-                }
-                if (vsp < 0)
-                    vsp += 432;
-            }
-            bfa = 432 - top - scrollines;
-        }
-*/
         d[0] = top >> 8;        //TFA
         d[1] = top;
         d[2] = scrollines >> 8; //VSA
@@ -727,7 +716,6 @@ void MCUFRIEND_kbv::vertScroll(int16_t top, int16_t scrollines, int16_t offset)
         d[4] = bfa >> 8;        //BFA
         d[5] = bfa;
         WriteCmdParamN(is8347 ? 0x0E : 0x33, 6, d);
-//        if (offset == 0 && rotation > 1) vsp = top + scrollines;   //make non-valid
 		d[0] = vsp >> 8;        //VSP
         d[1] = vsp;
         WriteCmdParamN(is8347 ? 0x14 : 0x37, 2, d);
@@ -740,61 +728,36 @@ void MCUFRIEND_kbv::vertScroll(int16_t top, int16_t scrollines, int16_t offset)
 		return;
     }
     // cope with 9320 style variants:
-    switch (_lcd_ID) {
-    case 0x7783:
-        WriteCmdData(0x61, _lcd_rev);   //!NDL, !VLE, REV
-        WriteCmdData(0x6A, vsp);        //VL#
-        break;
-#ifdef SUPPORT_0139 
-    case 0x0139:
-        WriteCmdData(0x07, 0x0213 | (_lcd_rev << 2));  //VLE1=1, GON=1, REV=x, D=3
-        WriteCmdData(0x41, vsp);  //VL# check vsp
-        break;
-#endif
-#if defined(SUPPORT_0154) || defined(SUPPORT_9225)  //thanks tongbajiel
-    case 0x9225:
-	case 0x0154:
+    if (_lcd_ID == 0x7783) return;      //ST7781 scroll is broken
+    uint16_t reg = 0x006A;
+    if (_9320_capable & SEA_REG_31) {
         WriteCmdData(0x31, sea);        //SEA
         WriteCmdData(0x32, top);        //SSA
         WriteCmdData(0x33, vsp - top);  //SST
-        break;
-#endif
-#ifdef SUPPORT_1289
-    case 0x1289:
-        WriteCmdData(0x41, vsp);        //VL#
-        break;
-#endif
-	case 0x5420:
-    case 0x7793:
-	case 0x9326:
-	case 0xB509:
-        WriteCmdData(0x401, (1 << 1) | _lcd_rev);       //VLE, REV 
-        WriteCmdData(0x404, vsp);       //VL# 
-        break;
-    default:
-        // 0x6809, 0x9320, 0x9325, 0x9335, 0xB505 can only scroll whole screen
-        WriteCmdData(0x61, (1 << 1) | _lcd_rev);        //!NDL, VLE, REV
-        WriteCmdData(0x6A, vsp);        //VL#
-        break;
+        return;
     }
+    if (_9320_capable & VSP_REG_41) reg = 0x0041;
+    if (_9320_capable & VSP_REG_0404) reg = 0x0404;
+    WriteCmdData(reg, vsp);        //VL#
+    return;
 }
 
 void MCUFRIEND_kbv::invertDisplay(bool i)
 {
     uint16_t reg = 0x61;
-    uint8_t rev_bm = (1<<0), def = 0x00;
+    uint8_t rev_bm = (1<<0), def_bm = 0x02; //VLE
     _lcd_rev = ((_lcd_capable & REV_SCREEN) != 0) ^ i;
     if (_lcd_capable & MIPI_DCS_REV1) {
         if (is8347) {
             if (_lcd_ID == 0x8347 || _lcd_ID == 0x5252) {
-			    def = 0x02;       //INVON id bit#2,  NORON=bit#1
+			    def_bm = 0x02;    //INVON id bit#2,  NORON=bit#1
                 rev_bm = (1<<2);
             } else {              //HX8347-D, G, I: SCROLLON=bit3, INVON=bit1
-                def = 0x08;
+                def_bm = 0x08;
                 rev_bm = (1<<1);
             }
-            if (_lcd_rev) def |= rev_bm;
-            WriteCmdParamN(0x01, 1, &def);
+            if (_lcd_rev) def_bm |= rev_bm;
+            WriteCmdParamN(0x01, 1, &def_bm);
         } else
             WriteCmdParamN(_lcd_rev ? 0x21 : 0x20, 0, NULL);
         return;
@@ -811,13 +774,12 @@ void MCUFRIEND_kbv::invertDisplay(bool i)
 #endif
     if (_9320_capable & INV_REG_07) {
         reg = 0x0007;
-        def = 0x0013;
+        def_bm = 0x0013;
         rev_bm = (1<<2);
     } else if (_9320_capable & INV_REG_0401) {
         reg = 0x0401;
-        def = 0x0002;
     }        
-    WriteCmdData(reg, def | rev_bm);
+    WriteCmdData(reg, def_bm | rev_bm);
     return;
 }
 
@@ -862,7 +824,6 @@ static void init_table16(const void *table, int16_t size)
 
 void MCUFRIEND_kbv::begin(uint16_t ID)
 {
-//    int16_t *p16;               //so we can "write" to a const protected variable.
     const uint8_t *table8_ads = NULL;
     int16_t table_size, screen_width = 240, screen_height = 320;
     reset();
@@ -871,7 +832,7 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
 #ifdef SUPPORT_0139
     case 0x0139:
         _lcd_capable = REV_SCREEN | XSA_XEA_16BIT;    //remove AUTO_READINC
-        _9320_capable = INV_REG_07;
+        _9320_capable = INV_REG_07 | VSP_REG_41;
         static const uint16_t S6D0139_regValues[] PROGMEM = {
             0x0000, 0x0001,     //Start oscillator
             0x0011, 0x1a00,     //Power Control 2
@@ -966,6 +927,7 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
     case 0x1289:
         _lcd_capable = 0 | XSA_XEA_16BIT | REV_SCREEN | AUTO_READINC;
       common_1289:
+        _9320_capable = VSP_REG_41;
         // came from MikroElektronika library http://www.hmsprojects.com/tft_lcd.html
         static const uint16_t SSD1289_regValues[] PROGMEM = {
             0x0000, 0x0001,
@@ -2048,7 +2010,7 @@ case 0x4532:    // thanks Leodino
         _lcd_ID = 0x9225;                //fall through
     case 0x9225:
         _lcd_capable = REV_SCREEN | READ_BGR;     //thanks tongbajiel
-        _9320_capable = INV_REG_07;
+        _9320_capable = INV_REG_07 | SEA_REG_31;
         static const uint16_t ILI9225_regValues[] PROGMEM = {
             /* Start Initial Sequence */
             /* Set SS bit and direction output from S528 to S1 */
@@ -2268,7 +2230,7 @@ case 0x4532:    // thanks Leodino
 	case 0x5420:
     case 0x9326:
         _lcd_capable = REV_SCREEN | READ_BGR;
-        _9320_capable = INV_REG_0401;
+        _9320_capable = INV_REG_0401 | VSP_REG_0404;
         static const uint16_t ILI9326_CPT28_regValues[] PROGMEM = {
 //************* Start Initial Sequence **********//
          0x0702, 0x3008,     //  Set internal timing, don’t change this value
@@ -2702,7 +2664,7 @@ case 0x4532:    // thanks Leodino
     case 0x7793:
     case 0xB509:
         _lcd_capable = REV_SCREEN;
-        _9320_capable = INV_REG_0401;
+        _9320_capable = INV_REG_0401 | VSP_REG_0404;
         static const uint16_t R61509V_regValues[] PROGMEM = {
             0x0000, 0x0000,
             0x0000, 0x0000,

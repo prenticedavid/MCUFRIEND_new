@@ -203,10 +203,9 @@ uint16_t MCUFRIEND_kbv::readID(void)
     ret = readReg(0x67);        //HX8347-A
     if (ret == 0x4747)
         return 0x8347;
-    ret = readReg40(0xEF);      //ILI9327: [xx 02 04 93 27 FF] 
+    ret = readReg40(0xEF);      //ILI9327: [xx 02 04 93 27 FF]
     if (ret == 0x9327)
         return 0x9327;
-//#if defined(SUPPORT_1963) && USING_16BIT_BUS 
     ret = readReg32(0xA1);      //SSD1963: [01 57 61 01]
     if (ret == 0x6101)
         return 0x1963;
@@ -214,75 +213,55 @@ uint16_t MCUFRIEND_kbv::readID(void)
         return 0x1526;          //subsequent begin() enables Command Access
     if (ret == 0xFF00)          //R61520: [xx FF FF 00]
         return 0x1520;          //subsequent begin() enables Command Access
-//#endif
-	ret = readReg40(0xBF);
-	if (ret == 0x8357)          //HX8357B: [xx 01 62 83 57 FF]
-        return 0x8357;
-	if (ret == 0x9481)          //ILI9481: [xx 02 04 94 81 FF]
-        return 0x9481;
-    if (ret == 0x1511)          //?R61511: [xx 02 04 15 11] not tested yet
-        return 0x1511;
-    if (ret == 0x1520)          //?R61520: [xx 01 22 15 20]
-        return 0x1520;
-    if (ret == 0x1526)          //?R61526: [xx 01 22 15 26]
-        return 0x1526;
-    if (ret == 0x1581)          //R61581:  [xx 01 22 15 81]
-        return 0x1581;
-    if (ret == 0x1400)          //?RM68140:[xx FF 68 14 00] not tested yet
-        return 0x6814;
+    ret = readReg40(0xBF);
+    //?R61511: [xx 02 04 15 11] not tested yet
+    //?R61520: [xx 01 22 15 20]
+    //?R61526: [xx 01 22 15 26]
+    //R61581:  [xx 01 22 15 81]
+    //HX8357B: [xx 01 62 83 57 FF]
+    //ILI9481: [xx 02 04 94 81 FF]
+    //RM68140: [xx FF 68 14 00] undocumented
+    if (ret == 0x1400) return 0x6814;
+    if (ret == 0x1511 || ret == 0x1520 || ret == 0x1526 || ret == 0x1581 || ret == 0x8357 || ret == 0x9481)
+        return ret;
     ret = readReg32(0xD4);
     if (ret == 0x5310)          //NT35310: [xx 01 53 10]
         return 0x5310;
     ret = readReg32(0xD7);
     if (ret == 0x8031)          //weird unknown from BangGood [xx 20 80 31] PrinceCharles
         return 0x8031;
-    ret = readReg32(0xFE) >> 8; //weird unknown from BangGood [04 20 53] 
+    ret = readReg32(0xFE) >> 8; //weird unknown from BangGood [04 20 53]
     if (ret == 0x2053)
         return 0x2053;
     uint32_t ret32 = readReg32(0x04);
+    //HX8357-D [xx 00 80 00] unlock and read(0xD0)
+    //R61526   [xx 06 15 26] if I have written NVM
+    //ST7735S: [xx 7C 89 F0]
+    //ST7789V: [xx 85 85 52]
+    //ILI9163: [xx 54 80 66] might be several controllers
+    //?unknown [xx 61 AC 11]
     msb = ret32 >> 16;
-    ret = ret32;	
-//    if (msb = 0x38 && ret == 0x8000) //unknown [xx 38 80 00] with D3 = 0x1602
+    ret = ret32;
     if (msb == 0x00 && ret == 0x8000) { //HX8357-D [xx 00 80 00]
-#if 1
         uint8_t cmds[] = {0xFF, 0x83, 0x57};
         pushCommand(0xB9, cmds, 3);
         msb = readReg(0xD0);
         if (msb == 0x99) return 0x0099; //HX8357-D from datasheet
-        if (msb == 0x90)        //HX8357-C undocumented  
-#endif
-            return 0x9090;      //BIG CHANGE: HX8357-D was 0x8357
+        if (msb == 0x90) return 0x9090; //HX8357-C undocumented
     }
-//    if (msb == 0xFF && ret == 0xFFFF) //R61526 [xx FF FF FF]
-//        return 0x1526;          //subsequent begin() enables Command Access
-    if (ret == 0x1526)          //R61526 [xx 06 15 26] if I have written NVM
-        return 0x1526;          //subsequent begin() enables Command Access
-	if (ret == 0x89F0)          //ST7735S: [xx 7C 89 F0]
-        return 0x7735;
-	if (ret == 0x8552)          //ST7789V: [xx 85 85 52]
-        return 0x7789;
-    if (ret == 0xAC11)          //?unknown [xx 61 AC 11]
-        return 0xAC11;
-    ret32 = readReg32(0xD3);      //[xx 91 63 00]
-    ret = ret32 >> 8;
-    if (ret == 0x9163) return ret;
+    if (ret == 0x1526) return 0x1526;          //subsequent begin() enables Command Access
+    if (ret == 0x89F0) return 0x7735;
+    if (ret == 0x8552) return 0x7789;
+    if (ret == 0xAC11) return 0xAC11;
     ret = readReg32(0xD3);      //for ILI9488, 9486, 9340, 9341
+    //ILI9163:  [xx 91 63 00] unknown.  DS says [xx 01 21 00]
+    //ILI9341:  [xx 00 93 41] i.e. many Ilitek
     msb = ret >> 8;
     if (msb == 0x93 || msb == 0x94 || msb == 0x98 || msb == 0x77 || msb == 0x16)
-        return ret;             //0x9488, 9486, 9340, 9341, 7796
+        return ret;             //0x9488, 9486, 9340, 9341, 7796, 1602
     if (ret == 0x00D3 || ret == 0xD3D3)
         return ret;             //16-bit write-only bus
-/*
-	msb = 0x12;                 //read 3rd,4th byte.  does not work in parallel
-	pushCommand(0xD9, &msb, 1);
-	ret2 = readReg(0xD3);
-    msb = 0x13;
-	pushCommand(0xD9, &msb, 1);
-	ret = (ret2 << 8) | readReg(0xD3);
-//	if (ret2 == 0x93)
-    	return ret2;
-*/
-	return readReg(0);          //0154, 7783, 9320, 9325, 9335, B505, B509
+    return readReg(0);          //0154, 7783, 9320, 9325, 9335, B505, B509
 }
 
  // independent cursor and window registers.   S6D0154, ST7781 increments.  ILI92320/5 do not.  

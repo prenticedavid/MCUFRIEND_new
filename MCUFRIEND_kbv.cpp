@@ -55,6 +55,13 @@
 #define VSP_REG_41      (1<<2)
 #define VSP_REG_0404    (1<<3)
 #define SEA_REG_31      (1<<4)
+#define SC_REG_37       (1<<5)
+#define SC_REG_46       (1<<6)
+#define SC_REG_0210     (1<<7)
+#define GS_REG_01       (1<<8)
+#define GS_REG_60       (1<<9)
+#define SS_REG_01       (1<<10)
+#define MAD_REG_03      (1<<11)
 
 #if (defined(USES_16BIT_BUS))   //only comes from SPECIALs
 #define USING_16BIT_BUS 1
@@ -407,6 +414,24 @@ void MCUFRIEND_kbv::setRotation(uint8_t r)
     }
     // cope with 9320 variants
     else {
+#if 1
+        _MC = 0x20, _MP = 0x21, _MW = 0x22, _SC = 0x50, _EC = 0x51, _SP = 0x52, _EP = 0x53;
+        if (_9320_capable & SC_REG_37) //S6D0154, ILI9225
+            _SC = 0x37, _EC = 0x36, _SP = 0x39, _EP = 0x38;
+        if (_9320_capable & SC_REG_46) //S6D0139
+            _SC = 0x46, _EC = 0x46, _SP = 0x48, _EP = 0x47;
+        if (_9320_capable & SC_REG_0210) //ILI9326, ...
+            _MC = 0x200, _MP = 0x201, _MW = 0x202, _SC = 0x210, _EC = 0x211, _SP = 0x212, _EP = 0x213;
+        GS = (val & 0x80) ? (1 << 15) : 0;
+        WriteCmdData(0x60, GS | 0x2700);    // Gate Scan Line (0xA700)
+        SS_v = (val & 0x40) ? (1 << 8) : 0;
+        WriteCmdData(0x01, SS_v);     // set Driver Output Control
+        ORG = (val & 0x20) ? (1 << 3) : 0;
+        if (val & 0x08)
+            ORG |= 0x1000;  //BGR
+        _lcd_madctl = ORG | 0x0030;
+        WriteCmdData(0x03, _lcd_madctl);    // set GRAM write direction and BGR=1.
+#else
         switch (_lcd_ID) {
 #if defined(SUPPORT_9225)
         case 0x9225:
@@ -485,6 +510,7 @@ void MCUFRIEND_kbv::setRotation(uint8_t r)
             break;
 #endif
 		}
+#endif
     }
     if ((rotation & 1) && ((_lcd_capable & MV_AXIS) == 0)) {
         uint16_t x;
@@ -745,7 +771,7 @@ void MCUFRIEND_kbv::vertScroll(int16_t top, int16_t scrollines, int16_t offset)
 void MCUFRIEND_kbv::invertDisplay(bool i)
 {
     uint16_t reg = 0x61;
-    uint8_t rev_bm = (1<<0), def_bm = 0x02; //VLE
+    uint8_t rev_bm = (1<<0), def_bm = (1<<1); //VLE
     _lcd_rev = ((_lcd_capable & REV_SCREEN) != 0) ^ i;
     if (_lcd_capable & MIPI_DCS_REV1) {
         if (is8347) {
@@ -779,7 +805,8 @@ void MCUFRIEND_kbv::invertDisplay(bool i)
     } else if (_9320_capable & INV_REG_0401) {
         reg = 0x0401;
     }        
-    WriteCmdData(reg, def_bm | rev_bm);
+    if (_lcd_rev) def_bm |= rev_bm;
+    WriteCmdData(reg, def_bm);
     return;
 }
 
@@ -832,7 +859,7 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
 #ifdef SUPPORT_0139
     case 0x0139:
         _lcd_capable = REV_SCREEN | XSA_XEA_16BIT;    //remove AUTO_READINC
-        _9320_capable = INV_REG_07 | VSP_REG_41;
+        _9320_capable = INV_REG_07 | VSP_REG_41 | SC_REG_46 | GS_REG_01;
         static const uint16_t S6D0139_regValues[] PROGMEM = {
             0x0000, 0x0001,     //Start oscillator
             0x0011, 0x1a00,     //Power Control 2
@@ -865,7 +892,7 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
 #ifdef SUPPORT_0154
     case 0x0154:
         _lcd_capable = AUTO_READINC | REV_SCREEN;
-        _9320_capable = INV_REG_07;
+        _9320_capable = INV_REG_07 | SC_REG_37 | GS_REG_01;
         static const uint16_t S6D0154_regValues[] PROGMEM = {
             0x0011, 0x001A,
             0x0012, 0x3121,     //BT=3, DC1=1, DC2=2, DC3=1
@@ -2010,7 +2037,7 @@ case 0x4532:    // thanks Leodino
         _lcd_ID = 0x9225;                //fall through
     case 0x9225:
         _lcd_capable = REV_SCREEN | READ_BGR;     //thanks tongbajiel
-        _9320_capable = INV_REG_07 | SEA_REG_31;
+        _9320_capable = INV_REG_07 | SEA_REG_31 | SC_REG_37;
         static const uint16_t ILI9225_regValues[] PROGMEM = {
             /* Start Initial Sequence */
             /* Set SS bit and direction output from S528 to S1 */
@@ -2230,7 +2257,7 @@ case 0x4532:    // thanks Leodino
 	case 0x5420:
     case 0x9326:
         _lcd_capable = REV_SCREEN | READ_BGR;
-        _9320_capable = INV_REG_0401 | VSP_REG_0404;
+        _9320_capable = INV_REG_0401 | VSP_REG_0404 | SC_REG_0210 | GS_REG_01;
         static const uint16_t ILI9326_CPT28_regValues[] PROGMEM = {
 //************* Start Initial Sequence **********//
          0x0702, 0x3008,     //  Set internal timing, don’t change this value
@@ -2664,7 +2691,7 @@ case 0x4532:    // thanks Leodino
     case 0x7793:
     case 0xB509:
         _lcd_capable = REV_SCREEN;
-        _9320_capable = INV_REG_0401 | VSP_REG_0404;
+        _9320_capable = INV_REG_0401 | VSP_REG_0404 | SC_REG_0210 | GS_REG_01;
         static const uint16_t R61509V_regValues[] PROGMEM = {
             0x0000, 0x0000,
             0x0000, 0x0000,

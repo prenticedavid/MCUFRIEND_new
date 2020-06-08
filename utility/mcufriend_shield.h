@@ -682,11 +682,11 @@ void write_8(uint8_t x)
 #define GP_OUT(port, reg, mask)           GROUP_MODE(port, reg, mask, 0x33333333)
 #define GP_INP(port, reg, mask)           GROUP_MODE(port, reg, mask, 0x44444444)
 #define PIN_OUTPUT(port, pin) {\
-        if (pin < 8) {GP_OUT(port, CRL, 0xF<<((pin)<<2));} \
+        if (pin < 8) {GP_OUT(port, CRL, 0xF<<((pin&7)<<2));} \
         else {GP_OUT(port, CRH, 0xF<<((pin&7)<<2));} \
     }
 #define PIN_INPUT(port, pin) { \
-        if (pin < 8) { GP_INP(port, CRL, 0xF<<((pin)<<2)); } \
+        if (pin < 8) { GP_INP(port, CRL, 0xF<<((pin&7)<<2)); } \
         else { GP_INP(port, CRH, 0xF<<((pin&7)<<2)); } \
     }
 

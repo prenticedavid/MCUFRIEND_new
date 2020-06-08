@@ -1,4 +1,4 @@
-//#define USE_SPECIAL             //check for custom drivers
+#define USE_SPECIAL             //check for custom drivers
 
 #define WR_ACTIVE2  {WR_ACTIVE; WR_ACTIVE;}
 #define WR_ACTIVE4  {WR_ACTIVE2; WR_ACTIVE2;}

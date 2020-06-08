@@ -18,6 +18,7 @@
 //#define USE_ADIGITALEU_TEENSY
 //#define USE_MIKROELEKTRONIKA
 //#define USE_XPRO_MEGA4809
+#define USE_ANTONIOTESTA
 
 /*
 HX8347A  tWC =100ns  tWRH = 35ns  tRCFM = 450ns  tRC = ?  ns
@@ -41,6 +42,63 @@ ST7796S  tWC = 66ns  tWRH = 15ns  tRCFM = 450ns  tRC = 160ns
 */
 
 #if 0
+
+#elif defined(USE_ANTONIOTESTA) && (defined(ARDUINO_GENERIC_STM32F103V) || defined(ARDUINO_GENERIC_F103VE)) // MAPLECORE or STM32CORE
+#warning Using USE_ANTONIOTESTA
+#define USES_16BIT_BUS
+#if defined(ARDUINO_ARCH_STM32)   //regular CMSIS libraries
+#define REGS(x) x
+#define GPIO_INIT()   { RCC->APB2ENR |= RCC_APB2ENR_IOPAEN | RCC_APB2ENR_IOPBEN | RCC_APB2ENR_IOPCEN | RCC_APB2ENR_IOPDEN | RCC_APB2ENR_AFIOEN; \
+        AFIO->MAPR |= AFIO_MAPR_SWJ_CFG_1;}
+#else                                                                  //weird Maple libraries
+#define REGS(x) regs->x
+#endif
+
+#define WRITE_DELAY { }
+#define READ_DELAY  { RD_ACTIVE; }
+//
+#define GROUP_MODE(port, reg, mask, val)  {port->REGS(reg) = (port->REGS(reg) & ~(mask)) | ((mask)&(val)); }
+#define GP_OUT(port, reg, mask)           GROUP_MODE(port, reg, mask, 0x33333333)
+#define GP_INP(port, reg, mask)           GROUP_MODE(port, reg, mask, 0x44444444)
+#define PIN_OUTPUT(port, pin) {\
+        if (pin < 8) {GP_OUT(port, CRL, 0xF<<((pin&7)<<2));} \
+        else {GP_OUT(port, CRH, 0xF<<((pin&7)<<2));} \
+    }
+#define PIN_INPUT(port, pin) { \
+        if (pin < 8) { GP_INP(port, CRL, 0xF<<((pin)<<2)); } \
+        else { GP_INP(port, CRH, 0xF<<((pin&7)<<2)); } \
+    }
+
+#define PIN_HIGH(port, pin)   (port)-> REGS(BSRR) = (1<<(pin))
+#define PIN_LOW(port, pin)    (port)-> REGS(BSRR) = (1<<((pin)+16))
+
+#define RD_PORT GPIOB
+#define RD_PIN  13
+#define WR_PORT GPIOB
+#define WR_PIN  12
+#define CD_PORT GPIOB
+#define CD_PIN  14
+#define CS_PORT GPIOB
+#define CS_PIN  15
+#define RESET_PORT GPIOB
+#define RESET_PIN  8
+
+// configure macros for the data pins on PD0-PD15
+#define DMASK 0xFFFF
+#define write_16(d) { \
+        GPIOD->REGS(BSRR) = (DMASK) << 16; \
+    }
+
+#define read_16()     ( (GPIOD->REGS(IDR) & DMASK) )
+
+//                                        PD15-PD8                        PD7-PD0
+#define setWriteDir() {GP_OUT(GPIOD, CRH, 0xFFFFFFFF); GP_OUT(GPIOD, CRL, 0xFFFFFFFF); }
+#define setReadDir()  {GP_INP(GPIOD, CRH, 0xFFFFFFFF); GP_INP(GPIOD, CRL, 0xFFFFFFFF); }
+
+#define write8(x)     { write16((x) & 0xFF); }
+#define write16(x)    { write_16(x); WRITE_DELAY; WR_STROBE; WR_IDLE; WR_IDLE; }
+#define READ_16(dst)  { RD_STROBE; READ_DELAY; dst = read_16(); RD_IDLE; RD_IDLE; RD_IDLE; }
+#define READ_8(dst)   { READ_16(dst); dst &= 0xFF; }
 
 #elif defined(__AVR_ATxmega128A1__)   // Xplained or MIKROE
 #if defined(USE_MIKROELEKTRONIKA)     // HX8347-D 16.2ns@62MHz 20.9ns@48MHz

@@ -796,7 +796,7 @@ void MCUFRIEND_kbv::vertScroll(int16_t top, int16_t scrollines, int16_t offset)
     }
 }
 
-void MCUFRIEND_kbv::invertDisplay(boolean i)
+void MCUFRIEND_kbv::invertDisplay(bool i)
 {
     uint8_t val;
     _lcd_rev = ((_lcd_capable & REV_SCREEN) != 0) ^ i;

@@ -122,8 +122,9 @@
 #define PIN_HIGH(p, b)       (p).OUT |= (1<<(b))
 #define PIN_OUTPUT(p, b)     (p).DIR |= (1<<(b))
 
-//################################### MEGA4809 NANO_EVERY ##############################
-#elif defined(__AVR_ATmega4809__) && defined(ARDUINO_AVR_NANO_EVERY)   // EVERY-4809 with Nano-Shield_Adapter
+//########################## MEGA4809 NANO_EVERY or UNO_WIFI_REV2 ##############################
+#elif defined(__AVR_ATmega4809__) && (defined(ARDUINO_AVR_NANO_EVERY) || defined(ARDUINO_AVR_UNO_WIFI_REV2))
+#if defined(ARDUINO_AVR_NANO_EVERY)
 #warning EVERY-4809 with Nano-Shield_Adapter using VPORT.OUT and BLD/BST
 #define RD_PORT VPORTD  //
 #define RD_PIN  3
@@ -135,6 +136,19 @@
 #define CS_PIN  0
 #define RESET_PORT VPORTF
 #define RESET_PIN  2
+#elif defined(ARDUINO_AVR_UNO_WIFI_REV2)
+#warning UNO_WIFI_REV2 using VPORT.OUT and BLD/BST
+#define RD_PORT VPORTD  //
+#define RD_PIN  0
+#define WR_PORT VPORTD
+#define WR_PIN  1
+#define CD_PORT VPORTD
+#define CD_PIN  2
+#define CS_PORT VPORTD
+#define CS_PIN  3
+#define RESET_PORT VPORTD
+#define RESET_PIN  4
+#endif
 
 #define AMASK         (3<<0)
 #define BMASK         (5<<0)
@@ -656,9 +670,9 @@ void write_8(uint8_t x)
 // Family specific Macros.  F103 needs ST and Maple compatibility
 // note that ILI9320 class of controller has much slower Read cycles
 #if 0
-#elif defined(__STM32F1__) || defined(ARDUINO_NUCLEO_F103C8) || defined(ARDUINO_BLUEPILL_F103C8) || defined(ARDUINO_NUCLEO_F103RB)
+#elif defined(__STM32F1__) || defined(ARDUINO_BLUEPILL_F103C8) || defined(ARDUINO_BLUEPILL_F103CB) || defined(ARDUINO_NUCLEO_F103RB)
 #define WRITE_DELAY { }
-#define READ_DELAY  { RD_ACTIVE; }
+#define READ_DELAY  { RD_ACTIVE4; }
 #if defined(__STM32F1__)  //MapleCore crts.o does RCC.  not understand regular syntax anyway
 #define GPIO_INIT()      
 #else
@@ -668,11 +682,11 @@ void write_8(uint8_t x)
 #define GP_OUT(port, reg, mask)           GROUP_MODE(port, reg, mask, 0x33333333)
 #define GP_INP(port, reg, mask)           GROUP_MODE(port, reg, mask, 0x44444444)
 #define PIN_OUTPUT(port, pin) {\
-        if (pin < 8) {GP_OUT(port, CRL, 0xF<<((pin)<<2));} \
+        if (pin < 8) {GP_OUT(port, CRL, 0xF<<((pin&7)<<2));} \
         else {GP_OUT(port, CRH, 0xF<<((pin&7)<<2));} \
     }
 #define PIN_INPUT(port, pin) { \
-        if (pin < 8) { GP_INP(port, CRL, 0xF<<((pin)<<2)); } \
+        if (pin < 8) { GP_INP(port, CRL, 0xF<<((pin&7)<<2)); } \
         else { GP_INP(port, CRH, 0xF<<((pin&7)<<2)); } \
     }
 
@@ -783,7 +797,7 @@ void write_8(uint8_t x)
 #endif
 
 #if 0
-#elif defined(ARDUINO_GENERIC_STM32F103C) || defined(ARDUINO_NUCLEO_F103C8) || defined(ARDUINO_BLUEPILL_F103C8)
+#elif defined(ARDUINO_GENERIC_STM32F103C) || defined(ARDUINO_BLUEPILL_F103C8) || defined(ARDUINO_BLUEPILL_F103CB)
 #warning Uno Shield on BLUEPILL
 
 //LCD pins  |D7 |D6 |D5 |D4 |D3 |D2 |D1 |D0 | |RD |WR |RS |CS |RST| |SD_SS|SD_DI|SD_DO|SD_SCK|

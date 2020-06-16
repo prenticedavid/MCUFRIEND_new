@@ -909,13 +909,13 @@ static __attribute((always_inline)) void write_8(uint8_t val)
 #define PIN_HIGH(port, pin)   PASTE(port, _PSOR) =  (1<<(pin))
 #define PIN_OUTPUT(port, pin) PASTE(port, _PDDR) |= (1<<(pin))
 
-#elif defined(USE_MY_BLUEPILL) && (defined(ARDUINO_GENERIC_STM32F103C) || defined(ARDUINO_BLUEPILL_F103C8))
+#elif defined(USE_MY_BLUEPILL) && (defined(ARDUINO_GENERIC_STM32F103C) || defined(ARDUINO_BLUEPILL_F103C8) || defined(ARDUINO_BLUEPILL_F103CB))
 #warning Uno Shield on MY BLUEPILL
 
 //LCD pins  |D7  |D6  |D5 |D4 |D3 |D2 |D1  |D0 | |RD |WR |RS |CS |RST| |SD_SS|SD_DI|SD_DO|SD_SCK| |SDA|SCL|
 //STM32 pin |PA3 |PA2 |PA1|PA0|PB7|PB6|PA10|PA9| |PB1|PB0|PA7|PA6|PA5| |PB12 |PB15 |PB14 |PB13  | |PB9|PB8|
 
-#if defined(ARDUINO_BLUEPILL_F103C8)   //regular CMSIS libraries
+#if defined(ARDUINO_BLUEPILL_F103C8) || defined(ARDUINO_BLUEPILL_F103CB)   //regular CMSIS libraries
 #define REGS(x) x
 #define GPIO_INIT()   { RCC->APB2ENR |= RCC_APB2ENR_IOPAEN | RCC_APB2ENR_IOPBEN | RCC_APB2ENR_IOPCEN | RCC_APB2ENR_IOPDEN | RCC_APB2ENR_AFIOEN; \
         AFIO->MAPR |= AFIO_MAPR_SWJ_CFG_1;}
@@ -924,7 +924,7 @@ static __attribute((always_inline)) void write_8(uint8_t val)
 #endif
 
 #define WRITE_DELAY { }
-#define READ_DELAY  { RD_ACTIVE; }
+#define READ_DELAY  { RD_ACTIVE4; }
 #define GROUP_MODE(port, reg, mask, val)  {port->REGS(reg) = (port->REGS(reg) & ~(mask)) | ((mask)&(val)); }
 #define GP_OUT(port, reg, mask)           GROUP_MODE(port, reg, mask, 0x33333333)
 #define GP_INP(port, reg, mask)           GROUP_MODE(port, reg, mask, 0x44444444)

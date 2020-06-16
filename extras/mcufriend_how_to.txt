@@ -26,6 +26,7 @@ vertScroll(), readGRAM(), readPixel(), setAddrWindow(), pushColors(), readID(), 
 readReg(), pushCommand(), WriteCmdData() access the controller registers
 
 10. It currently supports UNO shields with "mcufriend.com" pcbs with controllers:
+GC9302   240x320  ID=0x9302 
 HX8347-A 240x320  ID=0x8347 #define SUPPORT_8347A *** Untested ***
 HX8347-D 240x320  ID=0x4747 #define SUPPORT_8347D
 HX8347-G 240x320  ID=0x7575 #define SUPPORT_8347D
@@ -39,7 +40,6 @@ HX8367-A 240x320  ID=0x6767 #define SUPPORT_8347D
 ILI9163  128x160  ID=0x9163 #define SUPPORT_9163 
 ILI9225  176x220  ID=0x9225 #define SUPPORT_9225 
 ILI9226  176x220  ID=0x9226 #define SUPPORT_9225 
-ILI9302  240x320  ID=0x9302 
 ILI9320  240x320  ID=0x9320
 ILI9325  240x320  ID=0x9325
 ILI9326  240x400  ID=0x9326 #define SUPPORT_9326_5420

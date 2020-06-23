@@ -2561,7 +2561,29 @@ case 0x4532:    // thanks Leodino
 #endif
     case 0x1581:                        //no BGR in MADCTL.  set BGR in Panel Control
         _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | READ_24BITS; //thanks zdravke
-		goto common_9481;
+        static const uint8_t R61581_regValues[] PROGMEM = {    // 320x480
+ (0xB0), 1,0x00,                //unlock
+ (0xB3), 4,0x02,0x00,0x00,0x10, //WEMODE=1,TE1=0,DENC=0,EPF=1
+ (0xB4), 1, 0x00,               //RM=0,DM=0
+// (0xB9), 4, 0x01,0xFF,0xFF,0x18, //PWMON=1,BOCV=0xFF,PWMDIV=0xFF,PWMWM=1,LEDPWME=1,LEDPWMPOL=0,DIMON=0
+ (0xC0), 8,0x12,0x3B,0x00,0x00,0x00,0x01,0x00,0x43, //REV=1,SM=0,GS=0,BGR=1,SS=0,NL=0x3B,SCN=0,.,ISC=1,.,PCDIVH=4,PCDIVL=3
+ (0xC1), 4,0x08,0x15,0x08,0x08, //BC0=1,DIV0=0,RTN=0x15,BP0=0x08,FP0=0x08
+ (0xC4), 4,0x15,0x03,0x03,0x01, //SDT=1,NOW=5,MCP=3,VEQ=0,VEQW=0,VEM=3
+ (0xC6), 1,0x02,                //VSPL=0,HSPL=0,EPL=1,DPL=0
+ (0xC8),10,0x0c,0x05,0x0A,0x6B,0x04,0x06,0x15,0x10,0x00,0x31,
+// (0x3A), 1,0x55,
+// (0x38), 0,
+ (0xD0), 4,0x07,0x07,0x14,0xA2, //WCB=1,WCV=1,VC=7,VRH=0x14,BTMODE=1,BTH=2,BT=2
+ (0xD1), 3,0x03,0x5A,0x10,      //WCVCV=1,WCVDM=1,VCM=0x5A,VDV=0x10
+ (0xD2), 3,0x01,0x04,0x04,      //AP0=1,DC10=0,DC00=4,DC30=4
+};
+        table8_ads = R61581_regValues, table_size = sizeof(R61581_regValues);
+        p16 = (int16_t *) & HEIGHT;
+        *p16 = 480;
+        p16 = (int16_t *) & WIDTH;
+        *p16 = 320;
+        break;
+//		goto common_9481;
     case 0x9481:
         _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | READ_BGR;
 	  common_9481:

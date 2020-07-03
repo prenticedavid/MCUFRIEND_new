@@ -287,7 +287,7 @@ static void read_regs(char *title)
     readReg(0x00, 2, "ID: ILI9320, ILI9325, ILI9335, ...");
     readReg(0x04, 4, "Manufacturer ID");
     readReg(0x09, 5, "Status Register");
-    readReg(0x0A, 2, "Get Powsr Mode");
+    readReg(0x0A, 2, "Get Power Mode");
     readReg(0x0C, 2, "Get Pixel Format");
     readReg(0x30, 5, "PTLAR");
     readReg(0x33, 7, "VSCRLDEF");
@@ -480,7 +480,7 @@ static void read_8357(char *title)
 static void read_fk(char *title)
 {
     Serial.println(title);
-    readReg(0x0A, 2, "Get Powsr Mode");
+    readReg(0x0A, 2, "Get Power Mode");
     readReg(0x0B, 2, "Get Address Mode");
     readReg(0x0C, 2, "Get Pixel Format");
     readReg(0x0D, 2, "Get Display Mode");
@@ -509,7 +509,7 @@ static void read_xxxx(char *title)
 {
     Serial.println(title);
     readReg(0x09, 5, "Status Register");
-    readReg(0x0A, 2, "Get Powsr Mode");
+    readReg(0x0A, 2, "Get Power Mode");
     readReg(0x0B, 2, "Get Address Mode");
     readReg(0x0C, 2, "Get Pixel Format");
     readReg(0x0D, 2, "Get Display Mode");
@@ -562,7 +562,7 @@ static void read_9320(char *title)
 static void read_9327(char *title)
 {
     Serial.println(title);
-    readReg(0x0A, 2, "Get Powsr Mode");
+    readReg(0x0A, 2, "Get Power Mode");
     readReg(0x0B, 2, "Get Address Mode");
     readReg(0x0C, 2, "Get Pixel Format");
     readReg(0x0D, 2, "Get Display Mode");
@@ -598,7 +598,7 @@ static void read_9338(char *title)
     readReg(0x04, 4, "Manufacturer ID");
     //    readReg(0x05, 2, "DSI errors");
     readReg(0x09, 5, "Status Register");
-    readReg(0x0A, 2, "Get Powsr Mode");
+    readReg(0x0A, 2, "Get Power Mode");
     readReg(0x0B, 2, "Get Address Mode");
     readReg(0x0C, 2, "Get Pixel Format");
     readReg(0x0D, 2, "Get Display Mode");
@@ -637,7 +637,7 @@ static void read_9338(char *title)
 static void read_9481(char *title)
 {
     Serial.println(title);
-    readReg(0x0A, 2, "Get Powsr Mode");
+    readReg(0x0A, 2, "Get Power Mode");
     readReg(0x0B, 2, "Get Address Mode");
     readReg(0x0C, 2, "Get Pixel Format");
     readReg(0x0D, 2, "Get Display Mode");
@@ -682,7 +682,7 @@ static void read_9486(char *title)
     readReg(0x04, 4, "Manufacturer ID");
     readReg(0x05, 2, "DSI errors");
     readReg(0x09, 5, "Status Register");
-    readReg(0x0A, 2, "Get Powsr Mode");
+    readReg(0x0A, 2, "Get Power Mode");
     readReg(0x0B, 2, "Get Address Mode");
     readReg(0x0C, 2, "Get Pixel Format");
     readReg(0x0D, 2, "Get Display Mode");

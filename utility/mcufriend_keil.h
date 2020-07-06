@@ -74,8 +74,8 @@
 #define READ_DELAY  { RD_ACTIVE; }
 #elif defined(STM32F401xE)
 #warning 84MHz
-#define WRITE_DELAY { WR_ACTIVE2; } //100MHz
-#define READ_DELAY  { RD_ACTIVE4; }
+#define WRITE_DELAY { WR_ACTIVE2; } //84MHz
+#define READ_DELAY  { RD_ACTIVE8; }
 #elif defined(STM32F411xE)
 #define WRITE_DELAY { WR_ACTIVE2; WR_ACTIVE; } //100MHz
 #define READ_DELAY  { RD_ACTIVE4; RD_ACTIVE2; }

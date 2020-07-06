@@ -47,7 +47,7 @@ class MCUFRIEND_kbv : public Adafruit_GFX {
     protected:
 	uint32_t readReg32(uint16_t reg);
 	uint32_t readReg40(uint16_t reg);
-    uint16_t  _lcd_xor, _lcd_capable;
+    uint16_t  _lcd_xor, _lcd_capable, _9320_capable;
 
 	private:
 	uint16_t _lcd_ID, _lcd_rev, _lcd_madctl, _lcd_drivOut, _MC, _MP, _MW, _SC, _EC, _SP, _EP;

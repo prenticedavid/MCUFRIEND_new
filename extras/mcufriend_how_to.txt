@@ -89,6 +89,7 @@ UNKNOWN  240x320  ID=0xAC11
 UNKNOWN  240x320  ID=0x2053 weird controller from BangGood (was ID=0x0000)
 UNKNOWN  240x320  ID=0x8031 (no Vertical Scroll)
 UNKNOWN  240x320  ID=0x0001 (0x9320 style)
+UNKNOWN  240x320  ID=0x3229 readGRAM() does not work properly.   NEED DATASHEET.
 
 Most of these controllers are #define SUPPORT_xxxx by default.
 You can save Flash memory on a Uno by commenting out the macro(s) in MCUFRIEND_kbv.cpp

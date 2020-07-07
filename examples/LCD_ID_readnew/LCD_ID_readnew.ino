@@ -19,6 +19,7 @@
 
 uint8_t unlock_1520[]     = { (0xB0), 2, 0x00, 0x00 };
 uint8_t unlock_1526[]     = { (0xB0), 2, 0x3F, 0x3F };
+uint8_t unlock_3229[]     = { (0x0607), 0 };  //intentional 16-bit command
 uint8_t unlock_8357[]     = { (0xB9), 3, 0xFF, 0x83, 0x57};
 uint8_t unlock_5310[] = { (0xED), 2, 0x01, 0xFE};
 uint8_t d5310_0_in[] = { (0xEE), 2, 0xDE, 0x21}; //enter CMD3 8bit args
@@ -33,7 +34,7 @@ void setup()
 {
     Serial.begin(9600);
     while (!Serial) ;
-    Serial.println(F("Read Registers on MCUFRIEND UNO shield"));
+    Serial.println(F("Read Special Registers on MCUFRIEND UNO shield"));
     Serial.println(F("controllers either read as single 16-bit"));
     Serial.println(F("e.g. the ID is at readReg(0)"));
     Serial.println(F("or as a sequence of 8-bit values"));
@@ -43,6 +44,7 @@ void setup()
     lcdReset();      //ensures that controller is in default state
     //    unlock = unlock_1520;
     //    unlock = unlock_1526;
+    //    unlock = unlock_3229;
     //    unlock = unlock_8357;
     //    unlock = unlock_5310;
     //    page_N = d5310_1_in;
@@ -53,6 +55,7 @@ void setup()
     //    read_5310_P1("NT35310 P1");
     //    read_61509("R61509 / ILI9326");
     //    read_61526("R61520 / R61526");
+    //    read_61581("R61581");
     //    read_8357("HX8357X");
     //    read_9320("ILI9320");
     //    read_9327("ILI9327");
@@ -78,7 +81,8 @@ void readReg(uint16_t reg, uint8_t n, const char *msg)
     uint8_t val8;
     lcdReset();
     lcdSetWriteDir();
-    if (unlock) pushCommand(unlock[0], unlock + 2, unlock[1]);
+    if (unlock == unlock_3229) pushCommand(0x0607, NULL, 0);
+    else if (unlock) pushCommand(unlock[0], unlock + 2, unlock[1]);
     if (page_N) pushCommand(page_N[0], page_N + 2, page_N[1]);
     Serial.print("reg(0x");
     printhex(reg >> 8);
@@ -256,17 +260,9 @@ void lcdWriteRegister(uint16_t addr, uint16_t data)
     lcdWriteData(data);
 }
 
-void pushCommand(uint8_t command, uint8_t *block, int8_t n)
+void pushCommand(uint16_t command, uint8_t *block, int8_t n)
 {
-    lcdSetWriteDir();
-    digitalWrite(LCD_CS, LOW);
-    digitalWrite(LCD_RS, LOW);
-    digitalWrite(LCD_RD, HIGH);
-    digitalWrite(LCD_WR, HIGH);
-    lcdWrite8(command);
-    digitalWrite(LCD_WR, LOW);
-    delayMicroseconds(10);
-    digitalWrite(LCD_WR, HIGH);
+    lcdWriteCommand(command);
     digitalWrite(LCD_RS, HIGH);
     while (n--) {
         lcdWrite8(*block++);
@@ -287,7 +283,7 @@ static void read_regs(char *title)
     readReg(0x00, 2, "ID: ILI9320, ILI9325, ILI9335, ...");
     readReg(0x04, 4, "Manufacturer ID");
     readReg(0x09, 5, "Status Register");
-    readReg(0x0A, 2, "Get Powsr Mode");
+    readReg(0x0A, 2, "Get Power Mode");
     readReg(0x0C, 2, "Get Pixel Format");
     readReg(0x30, 5, "PTLAR");
     readReg(0x33, 7, "VSCRLDEF");
@@ -480,7 +476,7 @@ static void read_8357(char *title)
 static void read_fk(char *title)
 {
     Serial.println(title);
-    readReg(0x0A, 2, "Get Powsr Mode");
+    readReg(0x0A, 2, "Get Power Mode");
     readReg(0x0B, 2, "Get Address Mode");
     readReg(0x0C, 2, "Get Pixel Format");
     readReg(0x0D, 2, "Get Display Mode");
@@ -509,7 +505,7 @@ static void read_xxxx(char *title)
 {
     Serial.println(title);
     readReg(0x09, 5, "Status Register");
-    readReg(0x0A, 2, "Get Powsr Mode");
+    readReg(0x0A, 2, "Get Power Mode");
     readReg(0x0B, 2, "Get Address Mode");
     readReg(0x0C, 2, "Get Pixel Format");
     readReg(0x0D, 2, "Get Display Mode");
@@ -562,7 +558,7 @@ static void read_9320(char *title)
 static void read_9327(char *title)
 {
     Serial.println(title);
-    readReg(0x0A, 2, "Get Powsr Mode");
+    readReg(0x0A, 2, "Get Power Mode");
     readReg(0x0B, 2, "Get Address Mode");
     readReg(0x0C, 2, "Get Pixel Format");
     readReg(0x0D, 2, "Get Display Mode");
@@ -598,7 +594,7 @@ static void read_9338(char *title)
     readReg(0x04, 4, "Manufacturer ID");
     //    readReg(0x05, 2, "DSI errors");
     readReg(0x09, 5, "Status Register");
-    readReg(0x0A, 2, "Get Powsr Mode");
+    readReg(0x0A, 2, "Get Power Mode");
     readReg(0x0B, 2, "Get Address Mode");
     readReg(0x0C, 2, "Get Pixel Format");
     readReg(0x0D, 2, "Get Display Mode");
@@ -637,7 +633,7 @@ static void read_9338(char *title)
 static void read_9481(char *title)
 {
     Serial.println(title);
-    readReg(0x0A, 2, "Get Powsr Mode");
+    readReg(0x0A, 2, "Get Power Mode");
     readReg(0x0B, 2, "Get Address Mode");
     readReg(0x0C, 2, "Get Pixel Format");
     readReg(0x0D, 2, "Get Display Mode");
@@ -682,7 +678,7 @@ static void read_9486(char *title)
     readReg(0x04, 4, "Manufacturer ID");
     readReg(0x05, 2, "DSI errors");
     readReg(0x09, 5, "Status Register");
-    readReg(0x0A, 2, "Get Powsr Mode");
+    readReg(0x0A, 2, "Get Power Mode");
     readReg(0x0B, 2, "Get Address Mode");
     readReg(0x0C, 2, "Get Pixel Format");
     readReg(0x0D, 2, "Get Display Mode");
@@ -729,6 +725,38 @@ static void read_9486(char *title)
     readReg(0xF9, 3, "Adjust 5");
     readReg(0xFB, 2, "SPI Read");
     readReg(0xFC, 3, "Adjust 6");
+}
+
+static void read_61581(char *title)
+{
+    Serial.println(title);
+    readReg(0x0A, 2, "Get Power Mode");
+    readReg(0x0B, 2, "Get Address Mode");
+    readReg(0x0C, 2, "Get Pixel Format");
+    readReg(0x0D, 2, "Get Display Mode");
+    readReg(0x0E, 2, "Get Signal Mode");
+    readReg(0x0F, 2, "Get Diagnostic Result");
+    readReg(0xA1, 6, "RD_DDB Start");
+    readReg(0xB0, 2, "Command Access Protect");
+    readReg(0xB3, 5, "Frame Memory");
+    readReg(0xB4, 2, "Frame Mode");
+    readReg(0xB8, 19, "Backlight ctl1");
+    readReg(0xB9, 6, "Backlight ctl2");
+    readReg(0xBA, 2, "Backlight ctl3");
+    readReg(0xBC, 2, "MDDI CRC");
+    readReg(0xBF, 5, "Device Code Read");
+    readReg(0xC0, 9, "Panel Control");
+    readReg(0xC1, 5, "Display Timing Normal");
+    readReg(0xC2, 5, "Display Timing Partial");
+    readReg(0xC3, 5, "Display Timing Idle");
+    readReg(0xC4, 5, "Gate Drive");
+    readReg(0xC6, 2, "Interface Control");
+    readReg(0xC8, 21, "GAMMA");
+    readReg(0xD0, 4, "Power Control");
+    readReg(0xD1, 4, "VCOM Control");
+    readReg(0xD2, 4, "Power Normal");
+    readReg(0xD3, 4, "Power Partial");
+    readReg(0xD4, 4, "Power Idle");    
 }
 
 

@@ -269,6 +269,7 @@ uint16_t MCUFRIEND_kbv::readID(void)
     ret = readReg32(0xD3);      //for ILI9488, 9486, 9340, 9341
     //ILI9163:  [xx 91 63 00] unknown.  DS says [xx 01 21 00]
     //ILI9341:  [xx 00 93 41] i.e. many Ilitek
+    if (ret == 0x3229) return ret;
     msb = ret >> 8;
     if (msb == 0x93 || msb == 0x94 || msb == 0x98 || msb == 0x77 || msb == 0x16)
         return ret;             //0x9488, 9486, 9340, 9341, 7796, 1602
@@ -814,11 +815,8 @@ void MCUFRIEND_kbv::invertDisplay(bool i)
 #define TFTLCD_DELAY8 0x7F
 static void init_table(const void *table, int16_t size)
 {
-#ifdef SUPPORT_8357D_GAMMA
-    uint8_t *p = (uint8_t *) table, dat[36];            //HX8357_99 has GAMMA[34] 
-#else
-    uint8_t *p = (uint8_t *) table, dat[24];            //R61526 has GAMMA[22] 
-#endif
+    //copes with any uint8_t table.  Even HX8347 style
+    uint8_t *p = (uint8_t *) table;
     while (size > 0) {
         uint8_t cmd = pgm_read_byte(p++);
         uint8_t len = pgm_read_byte(p++);
@@ -826,9 +824,20 @@ static void init_table(const void *table, int16_t size)
             delay(len);
             len = 0;
         } else {
-            for (uint8_t i = 0; i < len; i++)
-                dat[i] = pgm_read_byte(p++);
-            WriteCmdParamN(cmd, len, dat);
+            CS_ACTIVE;
+            CD_COMMAND;
+            write8(cmd);
+            for (uint8_t d = 0; d++ < len; ) {
+                uint8_t x = pgm_read_byte(p++);
+                CD_DATA;
+                write8(x);
+                if (is8347 && d < len) {
+                    CD_COMMAND;
+                    cmd++;
+                    write8(cmd);
+                }
+            }
+            CS_IDLE;
         }
         size -= len + 2;
     }
@@ -1289,6 +1298,49 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
         break;
 #endif
 
+    case 0x3229:
+        _lcd_capable = 0 | AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | INVERT_SS; // | READ_24BITS;
+        static const uint8_t UNK3229_regValues[] PROGMEM = {
+            //----------------Star Initial Sequence-------//
+            //            0x11, 0, // exit sleep
+            0x06, 0, //enter extern command [cmd=0x0607]
+            0x07, 0,
+            0xb1, 2, 0x00, 0x12,      //RTN [00 12]
+            0xb4, 1, 0x02,            //line inversion [02]
+            0xb6, 4, 0x00, 0x20, 0x27, 0x00, //[0A 82 27 00]
+            0xca, 1, 0x01,            // [23]
+            0xcb, 1, 0x03,            // [20]
+            0xc0, 1, 0x13,            //vrh [21]
+            TFTLCD_DELAY8, 20,
+            0xc5, 1, 0xcc,            // [00]
+            0xc6, 1, 0x00,            // [00]
+            0xc7, 1, 0x04,            //osc [83]
+            0xc8, 1, 0x03,            // [20]
+            0xcc, 1, 0x06,            //vcm [31]
+            0xcd, 1, 0x1c,            //vdv [18]
+            0xf9, 2, 0x15, 0x15,      // ?? 13bit 454 [37]
+            0xf3, 3, 0x0a, 0x02, 0x0a, // [06 03 06]
+            0xf6, 3, 0x01, 0x10, 0x00, // [01 10 00]
+            /*
+                        0xe0, 1, 0x05,            //I don't believe these registers
+                        0xe1, 1, 0x32,            //safer to use power-on defaults
+                        0xe2, 1, 0x77,
+                        0xe3, 1, 0x77,
+                        0xe4, 1, 0x7f,
+                        0xe5, 1, 0xfa,
+                        0xe6, 1, 0x00,
+                        0xe7, 1, 0x74,
+                        0xe8, 1, 0x27,
+                        0xe9, 1, 0x10,
+                        0xea, 1, 0xc0,
+                        0xeb, 1, 0x25,
+            */
+            0xfa, 0, //exit extern command [cmd=0xFAFB]
+            0xfb, 0,
+        };
+        table8_ads = UNK3229_regValues, table_size = sizeof(UNK3229_regValues); //
+        break;
+
 #ifdef SUPPORT_4532
 //Support for LG Electronics LGDP4532 (also 4531 i guess) by Leodino v1.0 2-Nov-2016
 //based on data by waveshare and the datasheet of LG Electronics
@@ -1484,7 +1536,46 @@ case 0x4532:    // thanks Leodino
             0x0007, 0x0133,     // Display Control (R07h)
             TFTLCD_DELAY, 50,
         };
-        init_table16(ST7781_regValues, sizeof(ST7781_regValues));
+        static const uint16_t ST7781_regValues_CPT24[] PROGMEM = {
+            0x0001, 0x0100,     // Driver Output Control Register (R01h)
+            0x0002, 0x0700,     // LCD Driving Waveform Control (R02h)
+            0x0003, 0x1030,     // Entry Mode (R03h)
+            0x0008, 0x0302,     // Porch
+            0x0009, 0x0000,     // Scan
+            0x000A, 0x0008,     // Fmark Off
+            0x0010, 0x0000,     // Power Control 1 (R10h)
+            0x0011, 0x0005,     // Power Control 2 (R11h)
+            0x0012, 0x0000,     // Power Control 3 (R12h)
+            0x0013, 0x0000,     // Power Control 4 (R13h)
+            TFTLCD_DELAY, 100,
+            0x0010, 0x12B0,     // Power Control 1 SAP=1, BT=2, APE=1, AP=3
+            TFTLCD_DELAY, 50,
+            0x0011, 0x0007,     // Power Control 2 VC=7
+            TFTLCD_DELAY, 50,
+            0x0012, 0x008C,     // Power Control 3 VCIRE=1, VRH=12
+            0x0013, 0x1700,     // Power Control 4 VDV=23
+            0x0029, 0x0020,     // NVM read data 2 VCM=32
+            TFTLCD_DELAY, 50,
+            0x0030, 0x0000,     // Gamma Control 1 App Note CPT 2.4
+            0x0031, 0x0106,     // Gamma Control 2
+            0x0032, 0x0101,     // Gamma Control 3
+            0x0035, 0x0106,     // Gamma Control 4
+            0x0036, 0x0203,     // Gamma Control 5
+            0x0037, 0x0000,     // Gamma Control 6
+            0x0038, 0x0707,     // Gamma Control 7
+            0x0039, 0x0204,     // Gamma Control 8
+            0x003C, 0x0106,     // Gamma Control 9
+            0x003D, 0x0103,     // Gamma Control 10
+            0x0060, 0xA700,     // Driver Output Control (R60h) .kbv was 0xa700
+            0x0061, 0x0001,     // Driver Output Control (R61h)
+            0x0090, 0X0030,     // Panel Interface Control 1 (R90h)
+
+            // Display On
+            0x0007, 0x0133,     // Display Control (R07h)
+            TFTLCD_DELAY, 50,
+        };
+        init_table16(ST7781_regValues_CPT24, sizeof(ST7781_regValues_CPT24));
+        //init_table16(ST7781_regValues, sizeof(ST7781_regValues));
         break;
 #endif
 

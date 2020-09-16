@@ -680,14 +680,14 @@ void write_8(uint8_t x)
                      | (((d) & (1 << 6)) >> 2) \
                      | (((d) & (1 << 7)) >> 5); \
         }
-#define read_8() ((((GPIOD_PDIR & (1<<3)) >> 3) \
-                   | ((GPIOC_PDIR & (1 << 3)) >> 2) \
-                   | ((GPIOD_PDIR & (1 << 0)) << 2) \
-                   | ((GPIOA_PDIR & (1 << 12)) >> 9) \
-                   | ((GPIOA_PDIR & (1 << 13)) >> 9) \
-                   | ((GPIOD_PDIR & (1 << 7)) >> 2) \
-                   | ((GPIOD_PDIR & (1 << 4)) << 2) \
-                   | ((GPIOD_PDIR & (1 << 2)) << 5)))
+#define read_8()   ((((NRF_P0->IN & (1<<21)) >> 21) \
+                   | ((NRF_P0->IN & (1 << 27)) >> 26) \
+                   | ((NRF_P1->IN & (1 << 11)) >> 9) \
+                   | ((NRF_P1->IN & (1 << 12)) >> 9) \
+                   | ((NRF_P1->IN & (1 << 15)) >> 11) \
+                   | ((NRF_P1->IN & (1 << 13)) >> 8) \
+                   | ((NRF_P1->IN & (1 << 14)) << 8) \
+                   | ((NRF_P0->IN & (1 << 23)) << 16)))
 #define setWriteDir() {GPIOA_PDDR |= AMASK;GPIOC_PDDR |= CMASK;GPIOD_PDDR |= DMASK; }
 #define setReadDir() {GPIOA_PDDR &= ~AMASK;GPIOC_PDDR &= ~CMASK;GPIOD_PDDR &= ~DMASK; }
 #define write8(x)     { write_8(x); WRITE_DELAY; WR_STROBE; IDLE_DELAY; }

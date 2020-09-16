@@ -44,11 +44,11 @@
 #define RESET_PIN 31
 
 // configure macros for the data pins
-#define AMASK ((1<<23)|(1<<27)|(1<<21))   //NRF_P0
-#define BMASK ((1<<14)|(1<<13)|(1<<15)|(1<<12)|(1<<11))  //NRF_P1
+#define P0MASK ((1<<23)|(1<<27)|(1<<21))   //NRF_P0
+#define P1MASK ((1<<14)|(1<<13)|(1<<15)|(1<<12)|(1<<11))  //NRF_P1
 
 #define write_8(d) { \
-        NRF_P0->OUTCLR = AMASK; NRF_P1->OUTCLR = BMASK; \
+        NRF_P0->OUTCLR = P0MASK; NRF_P1->OUTCLR = P1MASK; \
         NRF_P0->OUTSET = (((d) & (1 << 0)) << 21) \
                      | (((d) & (1 << 1)) << 26) \
                      | (((d) & (1 << 7)) << 16); \
@@ -67,8 +67,9 @@
                    | ((NRF_P1->IN & (1 << 13)) >> 8) \
                    | ((NRF_P1->IN & (1 << 14)) << 8) \
                    | ((NRF_P0->IN & (1 << 23)) << 16)))
-#define setWriteDir() {NRF_P0->DIRSET = AMASK; NRF_P1->DIRSET = BMASK; }
-#define setReadDir()  {NRF_P0->DIRCLR = AMASK; NRF_P1->DIRCLR = BMASK; }
+
+#define setWriteDir() {NRF_P0->DIRSET = P0MASK; NRF_P1->DIRSET = P1MASK; }
+#define setReadDir()  {NRF_P0->DIRCLR = P0MASK; NRF_P1->DIRCLR = P1MASK; }
 #define write8(x)     { write_8(x); WRITE_DELAY; WR_STROBE; IDLE_DELAY; }
 #define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
 #define READ_8(dst)   { RD_STROBE; READ_DELAY; dst = read_8(); RD_IDLE; } //PJ adjusted

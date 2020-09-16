@@ -48,11 +48,11 @@
 #define BMASK ((1<<14)|(1<<13)|(1<<15)|(1<<12)|(1<<11))  //NRF_P1
 
 #define write_8(d) { \
-        NRF_P0->OUTCLR = AMASK; NRF_P0->OUTCLR = BMASK; \
+        NRF_P0->OUTCLR = AMASK; NRF_P1->OUTCLR = BMASK; \
         NRF_P0->OUTSET = (((d) & (1 << 0)) << 21) \
                      | (((d) & (1 << 1)) << 26) \
                      | (((d) & (1 << 7)) << 16); \
-        NRF_P0->OUTSET = (((d) & (1 << 2)) << 9) \
+        NRF_P1->OUTSET = (((d) & (1 << 2)) << 9) \
                      | (((d) & (1 << 3)) << 9) \
                      | (((d) & (1 << 4)) << 11) \
                      | (((d) & (1 << 5)) << 8) \

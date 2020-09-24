@@ -21,16 +21,16 @@
 #if !defined(USE_SPECIAL) || defined (USE_SPECIAL_FAIL)
 
 #if 0
-//####################################### NANO BLE ############################
+//####################################### NANO BLE SPECIAL4 ############################
 #elif defined(ARDUINO_ARDUINO_NANO33BLE)
-#warning regular UNO shield on a Nano BLE
+#warning regular UNO shield on a Nano BLE SPECIAL4
 
 //LCD pins  |D7   |D6   |D5   |D4   |D3   |D2   |D1   |D0   | |RD  |WR  |RS   |CS   |RST  |
 //BLE pin   |P0.23|P1.14|P1.13|P1.15|P1.12|P1.11|P0.27|P0.21| |P0.4|P0.5|P0.30|P0.29|P0.31|
 
-#define WRITE_DELAY { WR_ACTIVE2; }   //M4F @ 60MHz
-#define IDLE_DELAY  { }
-#define READ_DELAY  { RD_ACTIVE8; RD_ACTIVE; }
+#define WRITE_DELAY { WR_ACTIVE8; }   //M4F @ 64MHz
+#define IDLE_DELAY  { WR_IDLE2; }
+#define READ_DELAY  { RD_ACTIVE4; RD_ACTIVE; }
 
 #define RD_PORT NRF_P0
 #define RD_PIN 4
@@ -65,16 +65,27 @@
                    | ((NRF_P1->IN & (1 << 12)) >> 9) \
                    | ((NRF_P1->IN & (1 << 15)) >> 11) \
                    | ((NRF_P1->IN & (1 << 13)) >> 8) \
-                   | ((NRF_P1->IN & (1 << 14)) << 8) \
-                   | ((NRF_P0->IN & (1 << 23)) << 16)))
+                   | ((NRF_P1->IN & (1 << 14)) >> 8) \
+                   | ((NRF_P0->IN & (1 << 23)) >> 16)))
 
-#define setWriteDir() {NRF_P0->DIRSET = P0MASK; NRF_P1->DIRSET = P1MASK; }
-#define setReadDir()  {NRF_P0->DIRCLR = P0MASK; NRF_P1->DIRCLR = P1MASK; }
+#define BUS_CNF(x) {\
+    NRF_P0->PIN_CNF[21] = x;\
+    NRF_P0->PIN_CNF[27] = x;\
+    NRF_P1->PIN_CNF[11] = x;\
+    NRF_P1->PIN_CNF[12] = x;\
+    NRF_P1->PIN_CNF[15] = x;\
+    NRF_P1->PIN_CNF[13] = x;\
+    NRF_P1->PIN_CNF[14] = x;\
+    NRF_P0->PIN_CNF[23] = x;\
+}
+#define setWriteDir() {BUS_CNF(3); }
+#define setReadDir()  {BUS_CNF(0); }
+
 #define write8(x)     { write_8(x); WRITE_DELAY; WR_STROBE; IDLE_DELAY; }
 #define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
 #define READ_8(dst)   { RD_STROBE; READ_DELAY; dst = read_8(); RD_IDLE; } //PJ adjusted
 #define READ_16(dst)  { uint8_t hi; READ_8(hi); READ_8(dst); dst |= (hi << 8); }
-#define GPIO_INIT() {for (int i = 2; i <= 9; i++) pinMode(i, OUTPUT); for (int i = A0; i <= A4; i++) pinMode(i, OUTPUT);}
+//#define GPIO_INIT()   {for (int i = A0; i <= A4; i++) pinMode(i, OUTPUT);}
 
 #define PIN_LOW(port, pin)    (port)->OUTCLR = (1<<(pin))
 #define PIN_HIGH(port, pin)   (port)->OUTSET = (1<<(pin))

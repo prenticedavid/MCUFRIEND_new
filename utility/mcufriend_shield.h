@@ -578,7 +578,8 @@ void write_8(uint8_t x)
 #warning regular UNO shield on a Teensy 3.x
 
 //LCD pins  |D7 |D6 |D5 |D4  |D3  |D2 |D1 |D0 | |RD |WR |RS |CS |RST|
-//MK20 pin  |PD2|PD4|PD7|PA13|PA12|PD2|PC3|PD3| |PD1|PC0|PB0|PB1|PB3|
+//MK20 ports|PD2|PD4|PD7|PA13|PA12|PD0|PC3|PD3| |PD1|PC0|PB0|PB1|PB3|
+//3.6 pins  |7  |6  |5  |4   |3   |2  |9  |8  | |14 |15 |16 |17 |18 |
 
 #if defined(__MK20DX128__) || defined(__MK20DX256__) // Teensy3.0 || 3.2 96MHz
 #define WRITE_DELAY { WR_ACTIVE2; }

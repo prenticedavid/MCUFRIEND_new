@@ -8,7 +8,7 @@
 MCUFRIEND_kbv tft;       // hard-wired for UNO shields anyway.
 #include <TouchScreen.h>
 
-char *name = "Please Calibrate.";  //edit name of shield
+String name = "Please Calibrate.";  //edit name of shield
 const int XP=6,XM=A2,YP=A1,YM=7; //ID=0x9341
 const int TS_LEFT=907,TS_RT=136,TS_TOP=942,TS_BOT=139;
 

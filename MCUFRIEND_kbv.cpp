@@ -1,26 +1,29 @@
 //#define SUPPORT_0139              //S6D0139 +280 bytes
-#define SUPPORT_0154              //S6D0154 +320 bytes
-//#define SUPPORT_1289              //SSD1289,SSD1297 (ID=0x9797) +626 bytes, 0.03s
-//#define SUPPORT_1580              //R61580 Untested
+#define SUPPORT_0154              //S6D0154 +194 bytes
+//#define SUPPORT_1289              //SSD1289,SSD1297 (ID=0x9797) +538 bytes, 0.03s
+//#define SUPPORT_1580              //R61580 Untested +228 bytes
 #define SUPPORT_1963              //only works with 16BIT bus anyway
 //#define SUPPORT_4532              //LGDP4532 +120 bytes.  thanks Leodino
 #define SUPPORT_4535              //LGDP4535 +180 bytes
 #define SUPPORT_68140             //RM68140 +52 bytes defaults to PIXFMT=0x55
 //#define SUPPORT_7735
-#define SUPPORT_7781              //ST7781 +172 bytes
-//#define SUPPORT_8230              //UC8230 +118 bytes
+#define SUPPORT_7781              //ST7781 +160 bytes
+//#define SUPPORT_8230              //UC8230 +180 bytes
 //#define SUPPORT_8347D             //HX8347-D, HX8347-G, HX8347-I, HX8367-A +520 bytes, 0.27s
 //#define SUPPORT_8347A             //HX8347-A +500 bytes, 0.27s
 //#define SUPPORT_8352A             //HX8352A +486 bytes, 0.27s
 //#define SUPPORT_8352B             //HX8352B
 //#define SUPPORT_8357D_GAMMA       //monster 34 byte 
 //#define SUPPORT_9163              //
-//#define SUPPORT_9225              //ILI9225-B, ILI9225-G ID=0x9225, ID=0x9226, ID=0x6813 +380 bytes
-//#define SUPPORT_9326_5420         //ILI9326, SPFD5420 +246 bytes
+//#define SUPPORT_9225              //ILI9225-B, ILI9225-G ID=0x9225, ID=0x9226, ID=0x6813 +278 bytes
+#define SUPPORT_9320              //0x0001, SPFD5408, R61505, ILI9320 +296 bytes
+#define SUPPORT_9325              //RM68090, ILI9325, ILI9328, ILI9331, ILI9335 +310 bytes
+//#define SUPPORT_9326_5420         //ILI9326, SPFD5420 +250 bytes
 //#define SUPPORT_9342              //costs +114 bytes
 //#define SUPPORT_9806              //UNTESTED
 #define SUPPORT_9488_555          //costs +230 bytes, 0.03s / 0.19s
-#define SUPPORT_B509_7793         //R61509, ST7793 +244 bytes
+#define SUPPORT_B505_C505         //R61505V, R61505W +216 bytes
+#define SUPPORT_B509_7793         //R61509, ST7793 +252 bytes
 #define OFFSET_9327 32            //costs about 103 bytes, 0.08s
 
 #include "MCUFRIEND_kbv.h"
@@ -791,7 +794,7 @@ void MCUFRIEND_kbv::invertDisplay(bool i)
         return;
     }
     // cope with 9320 style variants:
-#if SUPPORT_1289
+#ifdef SUPPORT_1289
     if (_lcd_ID == 0x1289) {
         _lcd_drivOut &= ~(1 << 13);
         if (_lcd_rev)
@@ -2196,6 +2199,7 @@ case 0x4532:    // thanks Leodino
         break;
 #endif
 
+#if defined(SUPPORT_9320)
     case 0x0001:
         _lcd_capable = 0 | REV_SCREEN | INVERT_GS; //no RGB bug. thanks Ivo_Deshev
         goto common_9320;
@@ -2271,6 +2275,9 @@ case 0x4532:    // thanks Leodino
         };
         init_table16(ILI9320_regValues, sizeof(ILI9320_regValues));
         break;
+#endif
+
+#if defined(SUPPORT_9325)
     case 0x6809:
         _lcd_capable = 0 | REV_SCREEN | INVERT_GS | AUTO_READINC;
         goto common_93x5;
@@ -2344,6 +2351,7 @@ case 0x4532:    // thanks Leodino
         };
         init_table16(ILI9325_regValues, sizeof(ILI9325_regValues));
         break;
+#endif
 
 #if defined(SUPPORT_9326_5420)
 	case 0x5420:
@@ -2726,6 +2734,8 @@ case 0x4532:    // thanks Leodino
         screen_width = 320;
         screen_height = 480;
         break;
+
+#if defined(SUPPORT_B505_C505)
     case 0xB505:                //R61505V
     case 0xC505:                //R61505W
         _lcd_capable = 0 | REV_SCREEN | READ_LOWHIGH;
@@ -2781,6 +2791,7 @@ case 0x4532:    // thanks Leodino
         };
         init_table16(R61505V_regValues, sizeof(R61505V_regValues));
         break;
+#endif
 
 #if defined(SUPPORT_B509_7793)
     case 0x7793:

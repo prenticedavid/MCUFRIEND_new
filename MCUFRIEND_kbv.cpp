@@ -9,7 +9,7 @@
 //#define SUPPORT_7735
 #define SUPPORT_7781              //ST7781 +160 bytes
 //#define SUPPORT_8230              //UC8230 +180 bytes
-//#define SUPPORT_8347D             //HX8347-D, HX8347-G, HX8347-I, HX8367-A +520 bytes, 0.27s
+//#define SUPPORT_8347D             //HX8347-D, HX8347-G, HX8347-I, HX8367-A +834 bytes, 0.27s
 //#define SUPPORT_8347A             //HX8347-A +500 bytes, 0.27s
 //#define SUPPORT_8352A             //HX8352A +486 bytes, 0.27s
 //#define SUPPORT_8352B             //HX8352B
@@ -419,7 +419,6 @@ void MCUFRIEND_kbv::setRotation(uint8_t r)
     }
     // cope with 9320 variants
     else {
-#if 1
         _MC = 0x20, _MP = 0x21, _MW = 0x22, _SC = 0x50, _EC = 0x51, _SP = 0x52, _EP = 0x53;
         if (_9320_capable & SC_REG_37) //S6D0154, ILI9225
             _SC = 0x37, _EC = 0x36, _SP = 0x39, _EP = 0x38;
@@ -436,86 +435,6 @@ void MCUFRIEND_kbv::setRotation(uint8_t r)
             ORG |= 0x1000;  //BGR
         _lcd_madctl = ORG | 0x0030;
         WriteCmdData(0x03, _lcd_madctl);    // set GRAM write direction and BGR=1.
-#else
-        switch (_lcd_ID) {
-#if defined(SUPPORT_9225)
-        case 0x9225:
-            _SC = 0x37, _EC = 0x36, _SP = 0x39, _EP = 0x38;
-            _MC = 0x20, _MP = 0x21, _MW = 0x22;
-            GS = (val & 0x80) ? (1 << 9) : 0;
-            SS_v = (val & 0x40) ? (1 << 8) : 0;
-            WriteCmdData(0x01, GS | SS_v | 0x001C);       // set Driver Output Control
-            goto common_ORG;
-#endif
-#if defined(SUPPORT_0139) || defined(SUPPORT_0154)
-#ifdef SUPPORT_0139
-        case 0x0139:
-            _SC = 0x46, _EC = 0x46, _SP = 0x48, _EP = 0x47;
-            goto common_S6D;
-#endif
-#ifdef SUPPORT_0154
-        case 0x0154:
-            _SC = 0x37, _EC = 0x36, _SP = 0x39, _EP = 0x38;
-            goto common_S6D;
-#endif
-          common_S6D:
-            _MC = 0x20, _MP = 0x21, _MW = 0x22;
-            GS = (val & 0x80) ? (1 << 9) : 0;
-            SS_v = (val & 0x40) ? (1 << 8) : 0;
-            // S6D0139 requires NL = 0x27,  S6D0154 NL = 0x28
-            WriteCmdData(0x01, GS | SS_v | ((_lcd_ID == 0x0139) ? 0x27 : 0x28));
-            goto common_ORG;
-#endif
-        case 0x5420:
-        case 0x7793:
-        case 0x9326:
-		case 0xB509:
-            _MC = 0x200, _MP = 0x201, _MW = 0x202, _SC = 0x210, _EC = 0x211, _SP = 0x212, _EP = 0x213;
-            GS = (val & 0x80) ? (1 << 15) : 0;
-			uint16_t NL;
-			NL = ((432 / 8) - 1) << 9;
-            if (_lcd_ID == 0x9326 || _lcd_ID == 0x5420) NL >>= 1;
-            WriteCmdData(0x400, GS | NL);
-            goto common_SS;
-        default:
-            _MC = 0x20, _MP = 0x21, _MW = 0x22, _SC = 0x50, _EC = 0x51, _SP = 0x52, _EP = 0x53;
-            GS = (val & 0x80) ? (1 << 15) : 0;
-            WriteCmdData(0x60, GS | 0x2700);    // Gate Scan Line (0xA700)
-          common_SS:
-            SS_v = (val & 0x40) ? (1 << 8) : 0;
-            WriteCmdData(0x01, SS_v);     // set Driver Output Control
-          common_ORG:
-            ORG = (val & 0x20) ? (1 << 3) : 0;
-#ifdef SUPPORT_8230
-            if (_lcd_ID == 0x8230) {    // UC8230 has strange BGR and READ_BGR behaviour
-                if (rotation == 1 || rotation == 2) {
-                    val ^= 0x08;        // change BGR bit for LANDSCAPE and PORTRAIT_REV
-                }
-            }               
-#endif
-            if (val & 0x08)
-                ORG |= 0x1000;  //BGR
-            _lcd_madctl = ORG | 0x0030;
-            WriteCmdData(0x03, _lcd_madctl);    // set GRAM write direction and BGR=1.
-            break;
-#ifdef SUPPORT_1289
-        case 0x1289:
-            _MC = 0x4E, _MP = 0x4F, _MW = 0x22, _SC = 0x44, _EC = 0x44, _SP = 0x45, _EP = 0x46;
-            if (rotation & 1)
-                val ^= 0xD0;    // exchange Landscape modes
-            GS = (val & 0x80) ? (1 << 14) : 0;    //called TB (top-bottom), CAD=0
-            SS_v = (val & 0x40) ? (1 << 9) : 0;   //called RL (right-left)
-            ORG = (val & 0x20) ? (1 << 3) : 0;  //called AM
-            _lcd_drivOut = GS | SS_v | (REV << 13) | 0x013F;      //REV=0, BGR=0, MUX=319
-            if (val & 0x08)
-                _lcd_drivOut |= 0x0800; //BGR
-            WriteCmdData(0x01, _lcd_drivOut);   // set Driver Output Control
-            if (is9797) WriteCmdData(0x11, ORG | 0x4C30); else  // DFM=2, DEN=1, WM=1, TY=0
-            WriteCmdData(0x11, ORG | 0x6070);   // DFM=3, EN=0, TY=1
-            break;
-#endif
-		}
-#endif
     }
     if ((rotation & 1) && ((_lcd_capable & MV_AXIS) == 0)) {
         uint16_t x;

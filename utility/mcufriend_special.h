@@ -875,6 +875,69 @@ static __attribute((always_inline)) void write_8(uint8_t val)
 #define PIN_HIGH(port, pin)   (port)->PIO_SODR = (1<<(pin))
 #define PIN_OUTPUT(port, pin) (port)->PIO_OER = (1<<(pin))
 
+#elif defined(__SAM3X8E__) && defined(USE_MEGA_8BIT_PORTC_SHIELD)  //Surenoo 8/16bit shield on DUE
+#warning USE_MEGA_8BIT_PORTC_SHIELD on DUE
+// configure macros for the control pins
+#define RD_PORT PIOA
+#define RD_PIN  20     //D43
+#define WR_PORT PIOC
+#define WR_PIN  7      //D39
+#define CD_PORT PIOC
+#define CD_PIN  6      //D38
+#define CS_PORT PIOC
+#define CS_PIN  8      //D40
+#define RESET_PORT PIOC
+#define RESET_PIN  9   //D41
+// configure macros for data bus 
+// 
+#define AMASK         (1<<7)                    //PA7          D31
+#define CMASK         (31<<1)                   //PC1-PC5      D33-D37
+#define DMASK         (3<<9)                    //PD9,PD10     D30,D32
+
+#define write_8(x)   { PIOA->PIO_CODR = AMASK; PIOC->PIO_CODR = CMASK; PIOD->PIO_CODR = DMASK; \
+                        PIOA->PIO_SODR = (((x)&(1<<6))<<1); \
+                        PIOC->PIO_SODR = (((x)&(1<<0))<<5); \
+                        PIOC->PIO_SODR = (((x)&(1<<1))<<3); \
+                        PIOC->PIO_SODR = (((x)&(1<<2))<<1); \
+                        PIOC->PIO_SODR = (((x)&(1<<3))>>1); \
+                        PIOC->PIO_SODR = (((x)&(1<<4))>>3); \
+                        PIOD->PIO_SODR = (((x)&(1<<7))<<2)|(((x)&(1<<5))<<5); \
+					  }
+
+#define read_8()     ( 0\
+                        |((PIOC->PIO_PDSR & (1<<5))>>5)\
+                        |((PIOC->PIO_PDSR & (1<<4))>>3)\
+                        |((PIOC->PIO_PDSR & (1<<3))>>1)\
+                        |((PIOC->PIO_PDSR & (1<<2))<<1)\
+                        |((PIOC->PIO_PDSR & (1<<1))<<3)\
+                        |((PIOD->PIO_PDSR & (1<<10))>>5)\
+                        |((PIOA->PIO_PDSR & (1<<7))>>1)\
+                        |((PIOD->PIO_PDSR & (1<<9))>>2)\
+                      )
+
+#define setWriteDir() {\
+                        PIOA->PIO_OER = AMASK; PIOA->PIO_PER = AMASK; \
+                        PIOC->PIO_OER = CMASK; PIOB->PIO_PER = CMASK; \
+                        PIOD->PIO_OER = DMASK; PIOD->PIO_PER = DMASK; \
+                      }
+#define setReadDir()  { \
+                        PMC->PMC_PCER0 = (1 << ID_PIOA)|(1 << ID_PIOB)|(1 << ID_PIOC)|(1 << ID_PIOD); \
+						PIOA->PIO_ODR = AMASK; \
+						PIOC->PIO_ODR = CMASK; \
+						PIOD->PIO_ODR = DMASK; \
+					  }
+
+// ILI9486 is slower than ILI9481. HX8357-D is slower
+#define write8(x)     { write_8(x); WR_ACTIVE4; WR_STROBE; WR_IDLE; WR_IDLE; }
+#define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
+#define READ_8(dst)   { RD_STROBE; RD_ACTIVE4; dst = read_8(); RD_IDLE; RD_IDLE; RD_IDLE; }
+#define READ_16(dst)  { uint8_t hi; READ_8(hi); READ_8(dst); dst |= (hi << 8); }
+
+// Shield Control macros.
+#define PIN_LOW(port, pin)    (port)->PIO_CODR = (1<<(pin))
+#define PIN_HIGH(port, pin)   (port)->PIO_SODR = (1<<(pin))
+#define PIN_OUTPUT(port, pin) (port)->PIO_OER = (1<<(pin))
+
 #elif defined(__MK20DX256__) && defined(USE_BOBCACHELOT_TEENSY) // special for BOBCACHEALOT_TEENSY
 #warning  special for BOBCACHEALOT_TEENSY
 #define RD_PORT GPIOD

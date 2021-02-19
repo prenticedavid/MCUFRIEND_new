@@ -10,7 +10,7 @@
 #define SUPPORT_7781              //ST7781 +172 bytes
 //#define SUPPORT_8230              //UC8230 +118 bytes
 //#define SUPPORT_8347D             //HX8347-D, HX8347-G, HX8347-I, HX8367-A +520 bytes, 0.27s
-//#define SUPPORT_8347A             //HX8347-A +500 bytes, 0.27s
+#define SUPPORT_8347A             //HX8347-A +500 bytes, 0.27s
 //#define SUPPORT_8352A             //HX8352A +486 bytes, 0.27s
 //#define SUPPORT_8352B             //HX8352B
 //#define SUPPORT_8357D_GAMMA       //monster 34 byte 
@@ -1872,6 +1872,7 @@ case 0x4532:    // thanks Leodino
 #ifdef SUPPORT_8347A
     case 0x8347:
         _lcd_capable = REV_SCREEN | MIPI_DCS_REV1 | MV_AXIS;
+        is8347 = 1;  //omitted this statement.  thanks elmahdi-lab
         // AN.01 The reference setting of CMO 3.2” Panel
         static const uint8_t HX8347A_CMO32_regValues[] PROGMEM = {
             //  VENDOR Gamma for 3.2"
@@ -2019,7 +2020,7 @@ case 0x4532:    // thanks Leodino
             (0x46), 12, 0x94, 0x41, 0x00, 0x33, 0x23, 0x45, 0x44, 0x77, 0x12, 0xCC, 0x46, 0x82,
             (0x01), 1, 0x06,    //Display Mode [06]
             (0x16), 1, 0xC8,    //MADCTL [00] MY=1, MX=1, BGR=1
-//            (0x70), 1, 0x05,    //Panel [06] 16-bit
+            (0x70), 1, 0x05,    //Panel [06] 16-bit REMOVE COMMENT
             (0x23), 3, 0x95, 0x95, 0xFF,        //Cycle Control 1-3 [95 95 FF]
             (0x27), 4, 0x02, 0x02, 0x02, 0x02,  //Display Control 2-5 [02 02 02 02]
             (0x2C), 2, 0x02, 0x02,      //Display Control 6-7 [02 02]

@@ -1871,150 +1871,8 @@ case 0x4532:    // thanks Leodino
 
 #ifdef SUPPORT_8347A
     case 0x8347:
-        _lcd_capable = REV_SCREEN | MIPI_DCS_REV1 | MV_AXIS;
+        _lcd_capable = REV_SCREEN | MIPI_DCS_REV1 | MV_AXIS | INVERT_GS; //vert-flip
         is8347 = 1;  //omitted this statement.  thanks elmahdi-lab
-        // AN.01 The reference setting of CMO 3.2” Panel
-        static const uint8_t HX8347A_CMO32_regValues[] PROGMEM = {
-            //  VENDOR Gamma for 3.2"
-            (0x46), 12, 0xA4, 0x53, 0x00, 0x44, 0x04, 0x67, 0x33, 0x77, 0x12, 0x4C, 0x46, 0x44,
-            // Display Setting
-            (0x01), 1, 0x06,    // IDMON=0, INVON=1, NORON=1, PTLON=0
-            (0x16), 1, 0x48,    // MY=0, MX=0, MV=0, ML=1, BGR=0, TEON=0
-            (0x23), 3, 0x95, 0x95, 0xFF,        // N_DC=1001 0101, PI_DC=1001 0101, I_DC=1111 1111
-
-            (0x27), 4, 0x02, 0x02, 0x02, 0x02,  // N_BP=2, N_FP=2, PI_BP=2, PI_FP=2
-            (0x2C), 2, 0x02, 0x02,      // I_BP=2, I_FP=2
-
-            (0x3a), 4, 0x01, 0x01, 0xF0, 0x00,  // N_RTN=0, N_NW=1, P_RTN=0, P_NW=1, I_RTN=15, I_NW=0, DIV=0
-            TFTLCD_DELAY8, 5,
-            (0x35), 2, 0x38, 0x78,      // EQS=38h, EQP=78h
-            (0x3E), 1, 0x38,    // SON=38h
-            (0x40), 2, 0x0F, 0xF0,      // GDON=0Fh, GDOFF 
-            // Power Supply Setting
-            (0x19), 1, 0x49,    // CADJ=0100, CUADJ=100, OSD_EN=1 ,60Hz
-            (0x93), 1, 0x0F,    // RADJ=1111, 100%
-            TFTLCD_DELAY8, 5,
-            (0x20), 1, 0x40,    // BT=0100
-            (0x1D), 3, 0x07, 0x00, 0x04,        // VC1=7, VC3=0, VRH=??
-            //VCOM SETTING for 3.2"
-            (0x44), 2, 0x4D, 0x11,      // VCM=100 1101, VDV=1 0001   
-            TFTLCD_DELAY8, 10,
-            (0x1C), 1, 0x04,    // AP=100
-            TFTLCD_DELAY8, 20,
-            (0x1B), 1, 0x18,    // GASENB=0, PON=0, DK=1, XDK=0, VLCD_TRI=0, STB=0
-            TFTLCD_DELAY8, 40,
-            (0x1B), 1, 0x10,    // GASENB=0, PON=1, DK=0, XDK=0, VLCD_TRI=0, STB=0
-            TFTLCD_DELAY8, 40,
-            (0x43), 1, 0x80,    //set VCOMG=1
-            TFTLCD_DELAY8, 100,
-            // Display ON Setting
-            (0x90), 1, 0x7F,    // SAP=0111 1111
-            (0x26), 1, 0x04,    //GON=0, DTE=0, D=01
-            TFTLCD_DELAY8, 40,
-            (0x26), 1, 0x24,    //GON=1, DTE=0, D=01
-            (0x26), 1, 0x2C,    //GON=1, DTE=0, D=11
-            TFTLCD_DELAY8, 40,
-            (0x26), 1, 0x3C,    //GON=1, DTE=1, D=11
-            // INTERNAL REGISTER SETTING
-            (0x57), 1, 0x02,    // TEST_Mode=1: into TEST mode
-            (0x55), 1, 0x00,    // VDC_SEL=000, VDDD=1.95V
-            (0xFE), 1, 0x5A,    // For ESD protection
-            (0x57), 1, 0x00,    // TEST_Mode=0: exit TEST mode
-        };
-        // AN.01 The reference setting of CMO 2.4” Panel
-        static const uint8_t HX8347A_CMO24_regValues[] PROGMEM = {
-            //  VENDOR Gamma for 2.4"
-            (0x46), 12, 0x94, 0x41, 0x00, 0x33, 0x23, 0x45, 0x44, 0x77, 0x12, 0xCC, 0x46, 0x82,
-            // Display Setting
-            (0x01), 1, 0x06,    // IDMON=0, INVON=1, NORON=1, PTLON=0
-            (0x16), 1, 0x48,    // MY=0, MX=0, MV=0, ML=1, BGR=0, TEON=0
-            (0x23), 3, 0x95, 0x95, 0xFF,        // N_DC=1001 0101, PI_DC=1001 0101, I_DC=1111 1111
-
-            (0x27), 4, 0x02, 0x02, 0x02, 0x02,  // N_BP=2, N_FP=2, PI_BP=2, PI_FP=2
-            (0x2C), 2, 0x02, 0x02,      // I_BP=2, I_FP=2
-
-            (0x3a), 4, 0x01, 0x01, 0xF0, 0x00,  // N_RTN=0, N_NW=1, P_RTN=0, P_NW=1, I_RTN=15, I_NW=0, DIV=0
-            TFTLCD_DELAY8, 5,
-            (0x35), 2, 0x38, 0x78,      // EQS=38h, EQP=78h
-            (0x3E), 1, 0x38,    // SON=38h
-            (0x40), 2, 0x0F, 0xF0,      // GDON=0Fh, GDOFF 
-            // Power Supply Setting
-            (0x19), 1, 0x49,    // CADJ=0100, CUADJ=100, OSD_EN=1 ,60Hz
-            (0x93), 1, 0x0F,    // RADJ=1111, 100%
-            TFTLCD_DELAY8, 5,
-            (0x20), 1, 0x40,    // BT=0100
-            (0x1D), 3, 0x07, 0x00, 0x04,        // VC1=7, VC3=0, VRH=??
-            //VCOM SETTING for 2.4"
-            (0x44), 2, 0x40, 0x12,      // VCM=100 0000, VDV=1 0001   
-            TFTLCD_DELAY8, 10,
-            (0x1C), 1, 0x04,    // AP=100
-            TFTLCD_DELAY8, 20,
-            (0x1B), 1, 0x18,    // GASENB=0, PON=0, DK=1, XDK=0, VLCD_TRI=0, STB=0
-            TFTLCD_DELAY8, 40,
-            (0x1B), 1, 0x10,    // GASENB=0, PON=1, DK=0, XDK=0, VLCD_TRI=0, STB=0
-            TFTLCD_DELAY8, 40,
-            (0x43), 1, 0x80,    //set VCOMG=1
-            TFTLCD_DELAY8, 100,
-            // Display ON Setting
-            (0x90), 1, 0x7F,    // SAP=0111 1111
-            (0x26), 1, 0x04,    //GON=0, DTE=0, D=01
-            TFTLCD_DELAY8, 40,
-            (0x26), 1, 0x24,    //GON=1, DTE=0, D=01
-            (0x26), 1, 0x2C,    //GON=1, DTE=0, D=11
-            TFTLCD_DELAY8, 40,
-            (0x26), 1, 0x3C,    //GON=1, DTE=1, D=11
-            // INTERNAL REGISTER SETTING
-            (0x57), 1, 0x02,    // TEST_Mode=1: into TEST mode
-            (0x55), 1, 0x00,    // VDC_SEL=000, VDDD=1.95V
-            (0xFE), 1, 0x5A,    // For ESD protection
-            (0x57), 1, 0x00,    // TEST_Mode=0: exit TEST mode
-        };
-        static const uint8_t HX8347A_ITDB02_regValues[] PROGMEM = {
-            //  VENDOR Gamma ITDB02 same as CMO32.   Delays are shorter than AN01
-            (0x46), 12, 0xA4, 0x53, 0x00, 0x44, 0x04, 0x67, 0x33, 0x77, 0x12, 0x4C, 0x46, 0x44,
-            // Display Setting
-            (0x01), 1, 0x06,    // IDMON=0, INVON=1, NORON=1, PTLON=0
-            (0x16), 1, 0xC8,    // MY=0, MX=0, MV=0, ML=1, BGR=0, TEON=0 .itead
-            (0x23), 3, 0x95, 0x95, 0xFF,        // N_DC=1001 0101, PI_DC=1001 0101, I_DC=1111 1111
-
-            (0x27), 4, 0x02, 0x02, 0x02, 0x02,  // N_BP=2, N_FP=2, PI_BP=2, PI_FP=2
-            (0x2C), 2, 0x02, 0x02,      // I_BP=2, I_FP=2
-
-            (0x3a), 4, 0x01, 0x00, 0xF0, 0x00,  // N_RTN=0, N_NW=1, P_RTN=0, ?? P_NW=1, I_RTN=15, I_NW=0, DIV=0 .itead
-            TFTLCD_DELAY8, 5,
-            (0x35), 2, 0x38, 0x78,      // EQS=38h, EQP=78h
-            (0x3E), 1, 0x38,    // SON=38h
-            (0x40), 2, 0x0F, 0xF0,      // GDON=0Fh, GDOFF 
-            // Power Supply Setting 
-            (0x19), 1, 0x49,    // CADJ=0100, CUADJ=100, OSD_EN=1 ,60Hz
-            (0x93), 1, 0x0F,    // RADJ=1111, 100%
-            TFTLCD_DELAY8, 5,
-            (0x20), 1, 0x40,    // BT=0100
-            (0x1D), 3, 0x07, 0x00, 0x04,        // VC1=7, VC3=0, VRH=??
-            //VCOM SETTING for ITDB02
-            (0x44), 2, 0x4D, 0x0E,      // VCM=101 0000  4D, VDV=1 0001 .itead
-            TFTLCD_DELAY8, 5,
-            (0x1C), 1, 0x04,    // AP=100
-            TFTLCD_DELAY8, 5,
-            (0x1B), 1, 0x18,    // GASENB=0, PON=0, DK=1, XDK=0, VLCD_TRI=0, STB=0
-            TFTLCD_DELAY8, 5,
-            (0x1B), 1, 0x10,    // GASENB=0, PON=1, DK=0, XDK=0, VLCD_TRI=0, STB=0
-            TFTLCD_DELAY8, 5,
-            (0x43), 1, 0x80,    //set VCOMG=1
-            TFTLCD_DELAY8, 5,
-            // Display ON Setting
-            (0x90), 1, 0x7F,    // SAP=0111 1111
-            (0x26), 1, 0x04,    //GON=0, DTE=0, D=01
-            TFTLCD_DELAY8, 5,
-            (0x26), 1, 0x24,    //GON=1, DTE=0, D=01
-            (0x26), 1, 0x2C,    //GON=1, DTE=0, D=11
-            TFTLCD_DELAY8, 5,
-            (0x26), 1, 0x3C,    //GON=1, DTE=1, D=11
-            // INTERNAL REGISTER SETTING for ITDB02
-            (0x57), 1, 0x02,    // TEST_Mode=1: into TEST mode
-            (0x95), 1, 0x01,    // SET DISPLAY CLOCK AND PUMPING CLOCK TO SYNCHRONIZE .itead
-            (0x57), 1, 0x00,    // TEST_Mode=0: exit TEST mode
-        };
         static const uint8_t HX8347A_NHD_regValues[] PROGMEM = {
             //Gamma Setting NHD
             (0x46), 12, 0x94, 0x41, 0x00, 0x33, 0x23, 0x45, 0x44, 0x77, 0x12, 0xCC, 0x46, 0x82,
@@ -2057,12 +1915,7 @@ case 0x4532:    // thanks Leodino
             (0x55), 1, 0x00,    //?
             (0x57), 1, 0x00,    //? 
         };
-        // Atmel ASF code uses VCOM2-3: 0x38, 0x12. 50ms delays and no TEST mode changes.
         init_table(HX8347A_NHD_regValues, sizeof(HX8347A_NHD_regValues));
-        //        init_table(HX8347A_CMO32_regValues, sizeof(HX8347A_CMO32_regValues));
-        //        init_table(HX8347A_CMO24_regValues, sizeof(HX8347A_CMO24_regValues));
-        //        init_table(HX8347A_ITDB02_regValues, sizeof(HX8347A_ITDB02_regValues));
-        //        init_table(HX8347G_2_regValues, sizeof(HX8347G_2_regValues));
         break;
 #endif
 

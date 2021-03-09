@@ -270,6 +270,7 @@ uint16_t MCUFRIEND_kbv::readID(void)
     if (ret == 0x89F0) return 0x7735;
     if (ret == 0x8552) return 0x7789;
     if (ret == 0xAC11) return 0xAC11;
+    ret2 = ret;   //remember bytes 2,3
     ret = readReg32(0xD3);      //for ILI9488, 9486, 9340, 9341
     //ILI9163:  [xx 91 63 00] unknown.  DS says [xx 01 21 00]
     //ILI9341:  [xx 00 93 41] i.e. many Ilitek
@@ -277,7 +278,7 @@ uint16_t MCUFRIEND_kbv::readID(void)
     msb = ret >> 8;
     if (msb == 0x93 || msb == 0x94 || msb == 0x98 || msb == 0x77)
         return ret;             //0x9488, 9486, 9340, 9341, 7796
-    if (ret == 0x00D3 || ret == 0xD3D3)
+    if (ret == 0xD3D3 && ret2 == 0x0404)
         return ret;             //16-bit write-only bus
     return readReg(0);          //0154, 7783, 9320, 9325, 9335, B505, B509
 }

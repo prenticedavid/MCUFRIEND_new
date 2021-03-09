@@ -2866,9 +2866,9 @@ case 0x4532:    // thanks Leodino
             TFTLCD_DELAY8, 150,
             0x29, 0,            //Display On
         };
-		if (is_hx8347 == 0) init_table(&reset_off, sizeof(reset_off));
+		if (is8347 == 0) init_table(&reset_off, sizeof(reset_off));
 	    init_table(table8_ads, table_size);   //can change PIXFMT
-		if (is_hx8347 == 0) init_table(&wake_on, sizeof(wake_on));
+		if (is8347 == 0) init_table(&wake_on, sizeof(wake_on));
     }
     setRotation(0);             //PORTRAIT
     invertDisplay(false);

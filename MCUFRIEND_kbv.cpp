@@ -1878,7 +1878,9 @@ case 0x4532:    // thanks Leodino
             (0x46), 12, 0x94, 0x41, 0x00, 0x33, 0x23, 0x45, 0x44, 0x77, 0x12, 0xCC, 0x46, 0x82,
             (0x01), 1, 0x06,    //Display Mode [06]
             (0x16), 1, 0xC8,    //MADCTL [00] MY=1, MX=1, BGR=1
+            (0x38), 1, 0x10,    //RGB_EN
             (0x70), 1, 0x05,    //Panel [06] 16-bit REMOVE COMMENT
+            //(0x38), 1, 0x00,    //remove RGB_EN afterwards
             (0x23), 3, 0x95, 0x95, 0xFF,        //Cycle Control 1-3 [95 95 FF]
             (0x27), 4, 0x02, 0x02, 0x02, 0x02,  //Display Control 2-5 [02 02 02 02]
             (0x2C), 2, 0x02, 0x02,      //Display Control 6-7 [02 02]
@@ -1913,7 +1915,6 @@ case 0x4532:    // thanks Leodino
             (0x26), 1, 0x3C,    //Display Control 1 [A0] GON=1, DTE=1, D=3
             (0x57), 1, 0x02,    //?
             (0x55), 1, 0x00,    //?
-            (0x70), 1, 0x05,    //see if 0x70 is a Protected register.
             (0x57), 1, 0x00,    //? 
         };
         init_table(HX8347A_NHD_regValues, sizeof(HX8347A_NHD_regValues));
@@ -2866,9 +2867,9 @@ case 0x4532:    // thanks Leodino
             TFTLCD_DELAY8, 150,
             0x29, 0,            //Display On
         };
-		if (is8347 == 0) init_table(&reset_off, sizeof(reset_off));
+		init_table(&reset_off, sizeof(reset_off));
 	    init_table(table8_ads, table_size);   //can change PIXFMT
-		if (is8347 == 0) init_table(&wake_on, sizeof(wake_on));
+		init_table(&wake_on, sizeof(wake_on));
     }
     setRotation(0);             //PORTRAIT
     invertDisplay(false);

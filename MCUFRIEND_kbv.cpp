@@ -1913,6 +1913,7 @@ case 0x4532:    // thanks Leodino
             (0x26), 1, 0x3C,    //Display Control 1 [A0] GON=1, DTE=1, D=3
             (0x57), 1, 0x02,    //?
             (0x55), 1, 0x00,    //?
+            (0x70), 1, 0x05,    //see if 0x70 is a Protected register.
             (0x57), 1, 0x00,    //? 
         };
         init_table(HX8347A_NHD_regValues, sizeof(HX8347A_NHD_regValues));
@@ -2865,9 +2866,9 @@ case 0x4532:    // thanks Leodino
             TFTLCD_DELAY8, 150,
             0x29, 0,            //Display On
         };
-		init_table(&reset_off, sizeof(reset_off));
+		if (is_hx8347 == 0) init_table(&reset_off, sizeof(reset_off));
 	    init_table(table8_ads, table_size);   //can change PIXFMT
-		init_table(&wake_on, sizeof(wake_on));
+		if (is_hx8347 == 0) init_table(&wake_on, sizeof(wake_on));
     }
     setRotation(0);             //PORTRAIT
     invertDisplay(false);

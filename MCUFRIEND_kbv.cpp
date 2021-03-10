@@ -1880,6 +1880,7 @@ case 0x4532:    // thanks Leodino
             (0x16), 1, 0xC8,    //MADCTL [00] MY=1, MX=1, BGR=1
             (0x70), 1, 0x05,    //Panel [06] 16-bit REMOVE COMMENT
             (0x72), 1, 0x00,    //DFM=00, TR1=00 ONE LAST CHANCE ATTEMPT
+            (0x2F), 1, 0x05,    //[06] undocumented register
             (0x23), 3, 0x95, 0x95, 0xFF,        //Cycle Control 1-3 [95 95 FF]
             (0x27), 4, 0x02, 0x02, 0x02, 0x02,  //Display Control 2-5 [02 02 02 02]
             (0x2C), 2, 0x02, 0x02,      //Display Control 6-7 [02 02]

@@ -27,9 +27,9 @@
 //AVR   pin |GP13|GP12|GP11|GP10|GP9 |GP8|GP7|GP6| |GP16|GP26|GP27|GP28|GP22|GP14|
 //UNO pins  |7   |6   |5   |4   |3   |2  |9  |8  | |A0  |A1  |A2  |A3  |A4  |A5  |
 
-#define WRITE_DELAY { WR_ACTIVE8; }
-#define IDLE_DELAY  { WR_IDLE2; }
-#define READ_DELAY  { RD_ACTIVE16; }
+#define WRITE_DELAY { WR_ACTIVE4; }
+#define IDLE_DELAY  { WR_IDLE; }
+#define READ_DELAY  { RD_ACTIVE8; }
 
 #define RD_PORT sio_hw
 #define RD_PIN  16
@@ -47,6 +47,7 @@
 #define read_8()      ( (sio_hw->gpio_in & GPMASK) >> 6 )
 #define setWriteDir() { sio_hw->gpio_oe_set = GPMASK; }
 #define setReadDir()  { sio_hw->gpio_oe_clr = GPMASK; }
+#define GPIO_INIT() {for (int i = 6; i <= 14; i++) pinMode(i, OUTPUT); for (int i = 16; i <= 28; i++) pinMode(i, OUTPUT);}
 #define write8(x)     { write_8(x); WRITE_DELAY; WR_STROBE; IDLE_DELAY; }
 #define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
 #define READ_8(dst)   { RD_STROBE; READ_DELAY; dst = read_8(); RD_IDLE2; RD_IDLE; }

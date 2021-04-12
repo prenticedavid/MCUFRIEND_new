@@ -53,9 +53,9 @@ ST7796S  tWC = 66ns  tWRH = 15ns  tRCFM = 450ns  tRC = 160ns
 //UNO pins  |10  |11  |12  |13  | |18 |19 |
 
 
-#define WRITE_DELAY { WR_ACTIVE8; }
-#define IDLE_DELAY  { WR_IDL2; }
-#define READ_DELAY  { RD_ACTIVE16; }
+#define WRITE_DELAY { WR_ACTIVE4; }
+#define IDLE_DELAY  { WR_IDLE; }
+#define READ_DELAY  { RD_ACTIVE8; }
 
 #define RD_PORT sio_hw
 #define RD_PIN  14

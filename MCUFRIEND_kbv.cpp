@@ -30,7 +30,7 @@
 #if defined(USE_SERIAL)
 #include "utility/mcufriend_serial.h"
  //uint8_t running;
-#elif defined(__MBED__) && !defined(ARDUINO_ARDUINO_NANO33BLE)
+#elif defined(__MBED__) && !defined(ARDUINO_ARCH_MBED)
 #include "utility/mcufriend_mbed.h"
 #elif defined(__CC_ARM) || defined(__CROSSWORKS_ARM)
 #include "utility/mcufriend_keil.h"

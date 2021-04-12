@@ -1,4 +1,4 @@
-//#define USE_SPECIAL             //check for custom drivers
+#define USE_SPECIAL             //check for custom drivers
 
 #define WR_ACTIVE2  {WR_ACTIVE; WR_ACTIVE;}
 #define WR_ACTIVE4  {WR_ACTIVE2; WR_ACTIVE2;}
@@ -21,42 +21,6 @@
 #if !defined(USE_SPECIAL) || defined (USE_SPECIAL_FAIL)
 
 #if 0
-//################################### RP2040 ##############################
-#elif defined(ARDUINO_RASPBERRY_PI_PICO)       //regular UNO shield on PICO
-//LCD pins  |D7  |D6  |D5  |D4  |D3  |D2 |D1 |D0 | |RD  |WR  |RS  |CS  |RST |    |
-//AVR   pin |GP13|GP12|GP11|GP10|GP9 |GP8|GP7|GP6| |GP16|GP26|GP27|GP28|GP22|GP14|
-//UNO pins  |7   |6   |5   |4   |3   |2  |9  |8  | |A0  |A1  |A2  |A3  |A4  |A5  |
-
-#define WRITE_DELAY { WR_ACTIVE4; }
-#define IDLE_DELAY  { WR_IDLE; }
-#define READ_DELAY  { RD_ACTIVE8; }
-
-#define RD_PORT sio_hw
-#define RD_PIN  16
-#define WR_PORT sio_hw
-#define WR_PIN  26
-#define CD_PORT sio_hw
-#define CD_PIN  27
-#define CS_PORT sio_hw
-#define CS_PIN  28
-#define RESET_PORT sio_hw
-#define RESET_PIN  22
-
-#define GPMASK        (0xFF << 6)       //more intuitive style for mixed Ports
-#define write_8(x)    { sio_hw->gpio_clr = GPMASK; sio_hw->gpio_set = ((x) << 6) & GPMASK; }
-#define read_8()      ( (sio_hw->gpio_in & GPMASK) >> 6 )
-#define setWriteDir() { sio_hw->gpio_oe_set = GPMASK; }
-#define setReadDir()  { sio_hw->gpio_oe_clr = GPMASK; }
-#define GPIO_INIT() {for (int i = 6; i <= 14; i++) pinMode(i, OUTPUT); for (int i = 16; i <= 28; i++) pinMode(i, OUTPUT);}
-#define write8(x)     { write_8(x); WRITE_DELAY; WR_STROBE; IDLE_DELAY; }
-#define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
-#define READ_8(dst)   { RD_STROBE; READ_DELAY; dst = read_8(); RD_IDLE2; RD_IDLE; }
-#define READ_16(dst)  { uint8_t hi; READ_8(hi); READ_8(dst); dst |= (hi << 8); }
-
-#define PIN_LOW(port, pin)    (port)->gpio_clr = (1<<(pin))
-#define PIN_HIGH(port, pin)   (port)->gpio_set = (1<<(pin))
-#define PIN_OUTPUT(port, pin) (port)->gpio_oe_set = (1<<(pin))
-
 //################################### UNO ##############################
 #elif defined(__AVR_ATmega328P__) || defined(__AVR_ATmega328PB__)       //regular UNO shield on UNO
 //LCD pins  |D7 |D6 |D5 |D4 |D3 |D2 |D1 |D0 | |RD |WR |RS |CS |RST|

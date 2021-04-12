@@ -18,6 +18,7 @@
 //#define USE_ADIGITALEU_TEENSY
 //#define USE_MIKROELEKTRONIKA
 //#define USE_XPRO_MEGA4809
+#define USE_MY_PICO
 
 /*
 HX8347A  tWC =100ns  tWRH = 35ns  tRCFM = 450ns  tRC = ?  ns
@@ -41,6 +42,50 @@ ST7796S  tWC = 66ns  tWRH = 15ns  tRCFM = 450ns  tRC = 160ns
 */
 
 #if 0
+
+//################################### RP2040 ##############################
+#elif defined(USE_MY_PICO) && defined(ARDUINO_ARCH_RP2040)       //regular UNO shield on PICO
+//LCD pins  |D7  |D6  |D5  |D4  |D3  |D2 |D1  |D0  | |RD  |WR  |RS  |CS  |RST |    |
+//RP2040 pin|GP13|GP12|GP11|GP10|GP9 |GP8|GP19|GP18| |GP14|GP26|GP27|GP28|GP16|GP17|
+//UNO pins  |7   |6   |5   |4   |3   |2  |9   |8   | |A0  |A1  |A2  |A3  |A4  |A5  |
+//LCD pins  |CS  |MOSI|MISO|SCK | |SDA|SCL|
+//RP2040 pin|GP21|GP3 |GP4 |GP2 | |GP6|GP7|
+//UNO pins  |10  |11  |12  |13  | |18 |19 |
+
+
+#define WRITE_DELAY { WR_ACTIVE8; }
+#define IDLE_DELAY  { WR_IDL2; }
+#define READ_DELAY  { RD_ACTIVE16; }
+
+#define RD_PORT sio_hw
+#define RD_PIN  14
+#define WR_PORT sio_hw
+#define WR_PIN  26
+#define CD_PORT sio_hw
+#define CD_PIN  27
+#define CS_PORT sio_hw
+#define CS_PIN  28
+#define RESET_PORT sio_hw
+#define RESET_PIN  16
+
+#define LMASK         (0x03 << 18)
+#define HMASK         (0xFC << 6)
+#define GPMASK        (LMASK | HMASK)       //more intuitive style for mixed Ports
+#define write_8(x)    { sio_hw->gpio_clr = GPMASK; \
+                        sio_hw->gpio_set = ((((x) & 0x03) << 18)) | ((((x) & 0xFC) << 6)); \
+                      }
+#define read_8()      ( ((sio_hw->gpio_in & HMASK) >> 6) | ((sio_hw->gpio_in & LMASK) >> 18) )
+#define setWriteDir() { sio_hw->gpio_oe_set = GPMASK; }
+#define setReadDir()  { sio_hw->gpio_oe_clr = GPMASK; }
+#define GPIO_INIT() {for (int i = 8; i <= 14; i++) pinMode(i, OUTPUT); for (int i = 16; i <= 28; i++) pinMode(i, OUTPUT);}
+#define write8(x)     { write_8(x); WRITE_DELAY; WR_STROBE; IDLE_DELAY; }
+#define write16(x)    { uint8_t h = (x)>>8, l = x; write8(h); write8(l); }
+#define READ_8(dst)   { RD_STROBE; READ_DELAY; dst = read_8(); RD_IDLE2; RD_IDLE; }
+#define READ_16(dst)  { uint8_t hi; READ_8(hi); READ_8(dst); dst |= (hi << 8); }
+
+#define PIN_LOW(port, pin)    (port)->gpio_clr = (1<<(pin))
+#define PIN_HIGH(port, pin)   (port)->gpio_set = (1<<(pin))
+#define PIN_OUTPUT(port, pin) (port)->gpio_oe_set = (1<<(pin))
 
 #elif defined(__AVR_ATxmega128A1__)   // Xplained or MIKROE
 #if defined(USE_MIKROELEKTRONIKA)     // HX8347-D 16.2ns@62MHz 20.9ns@48MHz

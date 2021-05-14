@@ -194,7 +194,7 @@
 #endif
     
 
-#elif __TARGET_PROCESSOR == LPC1768
+#elif __TARGET_PROCESSOR == LPC1768 || defined(TARGET_LPC1768)
   #include <LPC17xx.h>
 // configure macros for the data pins
   #define write_8(d) { \
@@ -472,3 +472,4 @@
 #endif        // MCUs
 
 #endif     //PIN_SHIELD_8_H
+

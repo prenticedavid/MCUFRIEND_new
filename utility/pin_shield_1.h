@@ -326,7 +326,7 @@
 #define PIN_INPUT(port, pin) PIN_MODE2((port)->MODER, pin, 0x0)   //.kbv check this
 #endif
 
-#elif __TARGET_PROCESSOR == LPC1768
+#elif __TARGET_PROCESSOR == LPC1768 || defined(TARGET_LPC1768)
   #include <LPC17xx.h>
 // configure macros for the control pins
   #define D0_PORT LPC_GPIO0
@@ -1006,3 +1006,4 @@
 #if defined(D21_XPRO)
 #endif
 #endif
+

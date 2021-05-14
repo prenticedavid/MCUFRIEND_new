@@ -55,7 +55,13 @@ BusOut analog(A0, A1, A2, A3, A4, A5, NC, NC);
 #define RD_IDLE2  {RD_IDLE; RD_IDLE;}
 #define RD_IDLE4  {RD_IDLE2; RD_IDLE2;}
 
-#if defined(__MK20DX128__) || defined(___MK20DX256__) // Teensy3.0 || 3.2 96MHz
+#if 0
+#elif defined(TARGET_LPC1768) //
+#define WRITE_DELAY { WR_ACTIVE2; } //96MHz
+#define IDLE_DELAY  { }
+#define READ_DELAY  { RD_ACTIVE8; }
+#define READ_IDLE   { RD_IDLE; }
+#elif defined(__MK20DX128__) || defined(___MK20DX256__) // Teensy3.0 || 3.2 96MHz
 #define WRITE_DELAY { WR_ACTIVE2; }
 #define READ_DELAY  { RD_ACTIVE4; RD_ACTIVE; }
 #elif defined(__MK64FX512__) || defined(TARGET_M4) // Teensy3.5 120MHz thanks to PeteJohno
@@ -98,3 +104,4 @@ BusOut analog(A0, A1, A2, A3, A4, A5, NC, NC);
 
 #endif   //!USE_SERIAL
 #endif   //MCUFRIEND_KEIL_H_
+

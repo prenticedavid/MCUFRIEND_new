@@ -27,9 +27,9 @@
 #if defined(USE_SERIAL)
 #include "utility/mcufriend_serial.h"
  //uint8_t running;
-#elif defined(__MBED__)
+#elif defined(__MBED__) && !defined(ARDUINO_ARCH_MBED)
 #include "utility/mcufriend_mbed.h"
-#elif defined(__CC_ARM) || defined(__CROSSWORKS_ARM)
+#elif defined(__CC_ARM) || defined(__CROSSWORKS_ARM) || defined(IS_STM32CUBEIDE)
 #include "utility/mcufriend_keil.h"
 #else
 #include "utility/mcufriend_shield.h"
@@ -3026,3 +3026,4 @@ case 0x4532:    // thanks Leodino
 	}
 #endif
 }
+

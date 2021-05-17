@@ -586,6 +586,7 @@ void write_8(uint8_t x)
 
 #if defined(__MKL26Z64__)  // TeensyLC
 #define WRITE_DELAY { WR_ACTIVE2; }
+#define IDLE_DELAY  { }
 #define READ_DELAY  { RD_ACTIVE4; }
 #elif defined(__MK20DX128__) || defined(__MK20DX256__) // Teensy3.0 || 3.2 96MHz
 #define WRITE_DELAY { WR_ACTIVE2; }

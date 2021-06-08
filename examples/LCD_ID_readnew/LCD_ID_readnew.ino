@@ -50,6 +50,8 @@ void setup()
     //    unlock = unlock_8357;
     //    unlock = unlock_5310;
     //    page_N = d5310_1_in;
+    unlock = unlock_05A1_F0;
+    page_N = unlock_05A1_F1;
     //    for (uint16_t i = 0x00; i <= 0xFE; i++) readReg(i, 10, "f.k");
     read_regs("diagnose any controller");
     //    read_xxxx("mystery");

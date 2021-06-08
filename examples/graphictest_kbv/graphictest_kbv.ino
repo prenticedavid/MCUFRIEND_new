@@ -94,6 +94,7 @@ void setup(void) {
     Serial.println(ID, HEX);
     if (ID == 0xD3D3) ID = 0x9481; // write-only shield
 //    ID = 0x9329;                             // force ID
+    ID = 0x05A1;                //force S6D05A1
     tft.begin(ID);
 }
 

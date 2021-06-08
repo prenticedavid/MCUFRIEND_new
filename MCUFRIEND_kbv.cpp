@@ -1055,7 +1055,8 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
             0xFB, 16, 0x33, 0x03, 0x00, 0x20, 0x28, 0x20, 0x1D, 0x11, 0x35, 0x34, 0x32, 0x30, 0x04, 0x00, 0x00, 0x00,
             0x44, 2, 0x00, 0x01,
         };
-        init_table(S6D05A1_regValues_max, sizeof(S6D05A1_regValues_max));
+        //init_table(S6D05A1_regValues_max, sizeof(S6D05A1_regValues_max));
+        table8_ads = S6D05A1_regValues_max, table_size = sizeof(S6D05A1_regValues_max);
         p16 = (int16_t *) & HEIGHT;
         *p16 = 480;
         p16 = (int16_t *) & WIDTH;

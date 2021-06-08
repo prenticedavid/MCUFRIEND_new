@@ -17,6 +17,8 @@
 #define LCD_D6 6
 #define LCD_D7 7
 
+uint8_t unlock_05A1_F0[]     = { (0xF0), 2, 0x5A, 0x5A };
+uint8_t unlock_05A1_F1[]     = { (0xF1), 2, 0x5A, 0x5A };
 uint8_t unlock_1520[]     = { (0xB0), 2, 0x00, 0x00 };
 uint8_t unlock_1526[]     = { (0xB0), 2, 0x3F, 0x3F };
 uint8_t unlock_3229[]     = { (0x0607), 0 };  //intentional 16-bit command

@@ -1036,8 +1036,8 @@ void MCUFRIEND_kbv::begin(uint16_t ID)
 
 #ifdef SUPPORT_05A1
     case 0x05A1:
-        _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS | READ_24BITS;
-        static const uint8_t S6D05A1_regValues_max[] PROGMEM = {        // Atmel MaxTouch
+        _lcd_capable = AUTO_READINC | MIPI_DCS_REV1 | MV_AXIS;
+        static const uint8_t S6D05A1_regValues_max[] PROGMEM = {
             0xF0, 2, 0x5A, 0x5A,
             0xF1, 2, 0x5A, 0x5A,
             0xF2, 19, 0x3B, 0x33, 0x03, 0x0C, 0x08, 0x08, 0x08, 0x00, 0x08, 0x08, 0x00, 0x00, 0x00, 0x00, 0x33, 0x0C, 0x08, 0x0C, 0x08,

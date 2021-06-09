@@ -215,6 +215,8 @@ uint16_t MCUFRIEND_kbv::readID(void)
         return 0x1526;          //subsequent begin() enables Command Access
     if (ret == 0xFF00)          //R61520: [xx FF FF 00]
         return 0x1520;          //subsequent begin() enables Command Access
+    if (ret == 0xF000)          //S6D05A1: [xx F0 F0 00] 
+        return 0x05A1;          //subsequent begin() enables Command Access
 //#endif
 	ret = readReg40(0xBF);
 	if (ret == 0x8357)          //HX8357B: [xx 01 62 83 57 FF]

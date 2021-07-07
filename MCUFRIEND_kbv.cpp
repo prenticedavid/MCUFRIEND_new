@@ -1625,7 +1625,8 @@ case 0x4532:    // thanks Leodino
 
             0x00, 0x0001,
             0x0001, 0x0100,     // Driver Output Control Register (R01h)
-            0x0002, 0x0700,     // LCD Driving Waveform Control (R02h)
+	// CHANGED ENTRY BELOW TO AVOID "WHITE INTERLACED LINES"
+            0x0002, 0x0500,     // LCD Driving Waveform Control (R02h)
             0x0003, 0x1030,     // Entry Mode (R03h)
             0x0008, 0x0302,
             0x0009, 0x0000,
@@ -1641,6 +1642,8 @@ case 0x4532:    // thanks Leodino
             0x0012, 0x008E,     // Power Control 3 VCIRE=1, VRH=14
             0x0013, 0x0C00,     // Power Control 4 VDV=12
             0x0029, 0x0015,     // NVM read data 2 VCM=21
+	// ADDED ENTRY BELOW TO INCREASE FRAME RATE AND AVOID FLICKER
+            0x002B,0x000E,
             TFTLCD_DELAY, 10,
             0x0030, 0x0000,     // Gamma Control 1
             0x0031, 0x0107,     // Gamma Control 2
